@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlphaMind AI - Market News</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="news-header">
+        <div>
+            <h1>📰 Crypto News</h1>
+            <p class="page-subtitle">
+                Latest crypto market updates and important news
+            </p>
+        </div>
+
+        <button id="refreshNewsBtn">
+            🔄 Refresh
+        </button>
+    </div>
+
+    <div class="news-filters">
+
+        <input
+            type="text"
+            id="newsSearch"
+            placeholder="🔎 Search crypto news..."
+        >
+
+        <button class="filter-btn active" data-filter="ALL">
+            All
+        </button>
+
+        <button class="filter-btn" data-filter="BULLISH">
+            🟢 Bullish
+        </button>
+
+        <button class="filter-btn" data-filter="BEARISH">
+            🔴 Bearish
+        </button>
+
+        <button class="filter-btn" data-filter="NO EFFECT">
+            ⚪ No Effect
+        </button>
+
+    </div>
+
+    <div id="newsContainer"></div>
+
+</div>
+
+<script>
+
+const refreshButton = document.getElementById("refreshNewsBtn");
+const newsContainer = document.getElementById("newsContainer");
+
+const newsSearch = document.getElementById("newsSearch");
+const filterButtons = document.querySelectorAll(".filter-btn");
+
+let allNews = [];
+let currentFilter = "ALL";
+
+
+// =====================================
+// CREATE NEWS CARD
+// =====================================
+
+function createNewsCard(article) {
+
+    const card = document.createElement("div");
+
+    card.className = "news-card";
+
+    const publishedTime = article.publishedAt
+        ? new Date(article.publishedAt).toLocaleString()
+        : "Recently";
+
+    const score = Number(article.sentimentScore) || 0;
+
+    const confidence = Number(article.confidence) || 50;
+
+
+    // SENTIMENT
+    let sentimentText = "⚪ NO EFFECT";
+    let sentimentClass = "neutral";
+
+    if (score >= 30) {
+        sentimentText = "🟢 BULLISH";
+        sentimentClass = "bullish";
+    }
+
+    if (score <= -30) {
+        sentimentText = "🔴 BEARISH";
+        sentimentClass = "important";
+    }
+
+
+    // SCORE CLASS
+    let scoreClass = "score-neutral";
+    let scoreIcon = "➖";
+
+    if (score > 0) {
+        scoreClass = "score-bullish";
+        scoreIcon = "📈 +";
+    }
+
+    if (score < 0) {
+        scoreClass = "score-bearish";
+        scoreIcon = "📉 ";
+    }
+
+
+    // AI IMPACT
+    let impactClass = "impact-neutral";
+    let impactText =
+        "➖ Neutral — limited immediate market impact.";
+
+    if (score >= 70) {
+
+        impactClass = "impact-bullish";
+
+        impactText =
+            "📈 Strong bullish impact — positive momentum may support crypto prices.";
+
+    } else if (score >= 30) {
+
+        impactClass = "impact-bullish";
+
+        impactText =
+            "📈 Moderately bullish — positive market sentiment detected.";
+
+    } else if (score <= -70) {
+
+        impactClass = "impact-bearish";
+
+        impactText =
+            "📉 Strong bearish impact — elevated downside pressure detected.";
+
+    } else if (score <= -30) {
+
+        impactClass = "impact-bearish";
+
+        impactText =
+            "📉 Moderately bearish — some selling pressure detected.";
+    }
+
+
+    card.innerHTML = `
+
+        <div class="news-top">
+
+            <span class="news-tag market">
+                CRYPTO
+            </span>
+
+            <span class="news-tag ${sentimentClass}">
+                ${sentimentText}
+            </span>
+
+            <span class="news-time">
+                ${publishedTime}
+            </span>
+
+        </div>
+
+
+        <div class="news-score ${scoreClass}">
+            ${scoreIcon}${score}
+        </div>
+
+
+        <div class="news-confidence">
+            🤖 AI Confidence: ${confidence}%
+        </div>
+
+
+        ${
+            article.image
+            ? `
+                <div class="news-image-wrapper">
+
+                    <img
+                       src="${article.image}"
+                        alt="Crypto news"
+                        class="news-image"
+                       onerror="this.onerror=null; this.src='https://placehold.co/800x450/182235/22c55e?text=Bitcoin+News';"
+                    >
+
+                    <div
+                        class="news-image-fallback"
+                        style="display:none;"
+                    >
+                        📰
+                        <span>AlphaMind AI News</span>
+                    </div>
+
+                </div>
+            `
+            : `
+                <div class="news-image-wrapper">
+
+                    <div class="news-image-fallback">
+                        📰
+                        <span>AlphaMind AI News</span>
+                    </div>
+
+                </div>
+            `
+        }
+
+
+        <h2>
+            ${article.title || "Crypto Market News"}
+        </h2>
+
+
+        <p>
+            ${
+                article.description ||
+                "No description available."
+            }
+        </p>
+
+
+        <div class="news-source">
+            Source: ${article.source || "Unknown"}
+        </div>
+
+
+        <div class="ai-impact ${impactClass}">
+
+            <strong>
+                🤖 AlphaMind AI Impact
+            </strong>
+
+            <span>
+                ${impactText}
+            </span>
+
+        </div>
+
+
+        <a
+            href="${article.url}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="read-news-btn"
+        >
+            Read Full Article →
+        </a>
+
+    `;
+
+
+    newsContainer.appendChild(card);
+}
+
+
+// =====================================
+// DISPLAY / FILTER NEWS
+// =====================================
+
+function displayNews() {
+
+    const searchText =
+        newsSearch.value.toLowerCase().trim();
+
+        console.log("FILTER NEWS:", allNews);
+
+
+    const filteredNews = allNews.filter(article => {
+
+        const title =
+            (article.title || "").toLowerCase();
+
+        const description =
+            (article.description || "").toLowerCase();
+
+
+        const matchesSearch =
+            title.includes(searchText) ||
+            description.includes(searchText);
+
+
+       const score = Number(article.sentimentScore) || 0;
+
+const matchesFilter =
+    currentFilter === "ALL" ||
+    (currentFilter === "BULLISH" && score > 0) ||
+    (currentFilter === "BEARISH" && score < 0) ||
+    (currentFilter === "NO EFFECT" && score === 0);
+
+
+        return matchesSearch && matchesFilter;
+
+    });
+
+
+    newsContainer.innerHTML = "";
+
+
+    if (filteredNews.length === 0) {
+
+        newsContainer.innerHTML = `
+
+            <div class="news-card">
+
+                <h2>
+                    No news found
+                </h2>
+
+                <p>
+                    Try another search or filter.
+                </p>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+
+    filteredNews.forEach(article => {
+
+        createNewsCard(article);
+
+    });
+
+}
+
+
+// =====================================
+// FILTER BUTTONS
+// =====================================
+
+filterButtons.forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        filterButtons.forEach(btn => {
+
+            btn.classList.remove("active");
+
+        });
+
+
+        button.classList.add("active");
+
+
+        currentFilter =
+            button.dataset.filter;
+
+
+        displayNews();
+
+    });
+
+});
+
+
+// =====================================
+// SEARCH
+// =====================================
+
+newsSearch.addEventListener(
+    "input",
+    displayNews
+);
+
+
+// =====================================
+// LOAD NEWS
+// =====================================
+
+async function loadNews() {
+
+    refreshButton.textContent =
+        "🔄 Loading...";
+
+    refreshButton.disabled = true;
+
+
+    newsContainer.innerHTML = `
+
+        <div class="news-card">
+
+            <h2>
+                Loading latest crypto news...
+            </h2>
+
+            <p>
+                AlphaMind AI is fetching the latest crypto market news.
+            </p>
+
+        </div>
+
+    `;
+
+
+    try {
+
+        const response =
+            await fetch(
+                "http://localhost:3000/api/news"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "News API error"
+            );
+
+        }
+
+
+        allNews = data.articles || [];
+
+        console.log("LOADED NEWS:", allNews);
+
+
+        displayNews();
+
+
+    } catch (error) {
+
+        console.error(
+            "News loading error:",
+            error
+        );
+
+
+        newsContainer.innerHTML = `
+
+            <div class="news-card">
+
+                <div class="news-top">
+
+                    <span class="news-tag important">
+                        ERROR
+                    </span>
+
+                </div>
+
+
+                <h2>
+                    Unable to Load News
+                </h2>
+
+
+                <p>
+                    AlphaMind AI could not load the latest crypto news.
+                    Please make sure the backend is running.
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+
+    refreshButton.textContent =
+        "🔄 Refresh";
+
+    refreshButton.disabled = false;
+
+}
+
+
+// =====================================
+// REFRESH BUTTON
+// =====================================
+
+refreshButton.addEventListener(
+    "click",
+    loadNews
+);
+
+
+// =====================================
+// START
+// =====================================
+
+loadNews();
+
+</script>
+
+</body>
+</html>

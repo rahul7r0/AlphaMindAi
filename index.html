@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><link  rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlphaMind AI</title>
+</head>
+<body>
+
+    <header>
+    
+
+    <div class="logo">
+        <span class="logo-icon">▲</span>
+        <span>AlphaMind AI</span>
+    </div>
+
+    <nav>
+        <a href="#">Home</a>
+        <a href="#">Markets</a>
+        <a href="#">AI Scanner</a>
+        <a href="#">News</a>
+        <a href="#">Events</a>
+        <a href="#">Pricing</a>
+    </nav>
+
+    <div class="nav-buttons">
+<a href="login.html">
+    <button class="login-btn">Login</button>
+</a>
+        <button class="trial-btn">Start Free Trial</button>
+    </div>
+
+</header>
+
+<section class="stats">
+
+    <div class="card">
+        <h2>BTC</h2>
+        <p>Live Price</p>
+    </div>
+
+    <div class="card">
+        <h2>ETH</h2>
+        <p>Live Price</p>
+    </div>
+
+    <div class="card">
+        <h2>SOL</h2>
+        <p>Live Price</p>
+    </div>
+
+    <div class="card">
+        <h2>XRP</h2>
+        <p>Live Price</p>
+    </div>
+
+</section>
+
+<section class="hero">
+
+     <span class="badge">🚀 7 Days Free Trial</span>
+
+     <h1>Trade Smarter with AI</h1>
+
+     <p>
+        Live Crypto Market, AI Scanner, News, Economic Events,
+        Strategy Backtest and Professional Trading Tools.
+     </p>
+
+     <div class="hero-buttons">
+        <button class="start-btn">Start Free Trial</button>
+        <button class="learn-btn">Learn More</button>
+     </div>
+
+</section>
+
+</section>
+
+
+<section class="market-overview">
+
+<h2>Live Crypto Market</h2>
+
+<div class="market-grid">
+
+<div class="market-box">
+<h3>BTC/USDT</h3>
+<p>$0.00</p>
+<span class="up">+0.00%</span>
+</div>
+
+<div class="market-box">
+<h3>ETH/USDT</h3>
+<p>$0.00</p>
+<span class="up">+0.00%</span>
+</div>
+
+<div class="market-box">
+<h3>SOL/USDT</h3>
+<p>$0.00</p>
+<span class="up">+0.00%</span>
+</div>
+
+<div class="market-box">
+<h3>XRP/USDT</h3>
+<p>$0.00</p>
+<span class="up">+0.00%</span>
+</div>
+
+</div>
+
+</section>
+<section class="scanner-section">
+
+<h2>AI Scanner</h2>
+<p>Find high probability trading opportunities powered by AI.</p>
+
+<div class="scanner-grid">
+
+<div class="market-box" onclick="changeCoin('BINANCE:BTCUSDT','BTC/USDT')">
+    <h3>BTC/USDT</h3>
+    <p id="btc-price">$0.00</p>
+    <span id="btc-change">0.00%</span>
+</div>
+
+ <div class="market-box" onclick="changeCoin('BINANCE:ETHUSDT','ETH/USDT')">
+    <h3>ETH/USDT</h3>
+    <p id="eth-price">$0.00</p>
+    <span id="eth-change">0.00%</span>
+</div>
+
+<div class="market-box" onclick="changeCoin('BINANCE:SOLUSDT','SOL/USDT')">
+    <h3>SOL/USDT</h3>
+    <p id="sol-price">$0.00</p>
+    <span id="sol-change">0.00%</span>
+</div>
+
+<div class="market-box" onclick="changeCoin('BINANCE:XRPUSDT','XRP/USDT')">
+    <h3>XRP/USDT</h3>
+    <p id="xrp-price">$0.00</p>
+    <span id="xrp-change">0.00%</span>
+</div>
+
+</div>
+
+</section>
+<section class="scanner">
+
+  
+    <h2>🤖 AI Scanner</h2>
+    <p>AI Powered Trading Signals</p>
+
+    <div class="scanner-grid">
+
+        <div class="scan-card">
+            <h3>BTC/USDT</h3>
+            <p>Trend : Bullish 🟢</p>
+            <p>Confidence : 92%</p>
+            <p>EMA 9 : Above EMA20</p>
+            <p>Volume : High</p>
+            <p>Time Frame : 15 Min</p>
+        </div>
+
+        <div class="scan-card">
+            <h3>ETH/USDT</h3>
+            <p>Trend : Bearish 🔴</p>
+            <p>Confidence : 88%</p>
+            <p>EMA 9 : Below EMA20</p>
+            <p>Volume : Medium</p>
+            <p>Time Frame : 1 Hour</p>
+        </div>
+
+        <div class="scan-card">
+            <h3>SOL/USDT</h3>
+            <p>Trend : Bullish 🟢</p>
+            <p>Confidence : 95%</p>
+            <p>EMA 9 : Above EMA20</p>
+            <p>Volume : High</p>
+            <p>Time Frame : 4 Hour</p>
+        </div>
+
+    </div><div class="timeframe">
+    <button id="btn15">15 Min</button>
+<button id="btn30">30 Min</button>
+<button id="btn1h">1 Hour</button>
+<button id="btn4h">4 Hour</button>
+<button id="btn1d">1 Day</button>
+</div><div class="analysis-card">
+
+   <h3 id="analysisTitle">BTC/USDT Analysis (15 Min)</h3>
+
+    <p>📈 Signal: <strong id="signal">BUY</strong></p>
+   <p>🎯 Entry: <span id="entry">118500</span></p>
+    <p>🛑 Stop Loss: <span id="stoploss">117800</span></p>
+    <p>🎯 Target 1: <span id="target1">119800</span></p>
+   <p>🎯 Target 2: <span id="target2">120500</span></p>
+
+    <hr>
+
+    <p>EMA 9 : Bullish</p>
+    <p>EMA 20 : Bullish</p>
+    <p>EMA 50 : Bullish</p>
+    <p>EMA 200 : Bullish</p>
+
+    <p>RSI : 63</p>
+    <p>MACD : Bullish Cross</p>
+    <p>Volume : High</p>
+
+    <p>Trend : Strong Uptrend</p>
+
+    <p>Risk : Reward = 1 : 3</p>
+
+    <p>Confidence Score : 94%</p>
+
+</div>
+<h3>BTC/USDT Analysis</h3>
+
+<div class="analysis-grid">
+
+<div>
+<h4>📊 Trade</h4>
+<p>Signal : 🟢 BUY</p>
+<p>Entry : 118500</p>
+<p>Stop Loss : 117800</p>
+<p>Target : 119800</p>
+<p>Risk : Reward = 1:3</p>
+</div>
+
+<div>
+<h4>📈 Indicators</h4>
+<p>EMA 9 : Bullish</p>
+<p>EMA 20 : Bullish</p>
+<p>EMA 50 : Bullish</p>
+<p>EMA 200 : Bullish</p>
+<p>RSI : 63</p>
+<p>MACD : Bullish</p>
+</div>
+
+<div>
+<h4>🤖 AI Analysis</h4>
+<p>Trend : Strong Uptrend</p>
+<p>Volume : High</p>
+<p>Confidence : 94%</p>
+<p>Status : Active</p>
+</div>
+
+</div>
+<div class="confidence-box">
+    <h3>🤖 AI Confidence Score</h3>
+
+    <div class="progress-bar">
+        <div class="progress-fill">94%</div>
+    </div>
+
+    <p class="signal">🟢 Strong BUY Signal</p>
+</div>
+<section class="chart-section">
+
+    <h2>📈 Live Trading Chart</h2>
+
+    <div id="tradingview_chart"></div>
+
+</section>
+<section class="features">
+
+    <h2>Why Choose AlphaMind AI?</h2>
+
+    <div class="feature-grid">
+
+        <div class="feature-card">
+            <h3>🤖 AI Scanner</h3>
+            <p>Find high-probability Buy & Sell signals using AI.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>📈 Advanced Indicators</h3>
+            <p>EMA 9, 20, 50, 200 + RSI + Volume Analysis.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>🔔 Telegram Alerts</h3>
+            <p>Instant trading alerts for Premium users.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>📊 Strategy Backtest</h3>
+            <p>Test your strategy with historical data.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>📰 Live News</h3>
+            <p>Latest crypto news and important market updates.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>📅 Economic Events</h3>
+            <p>Track major events that can move the market.</p>
+        </div>
+
+    </div>
+    <section class="news-events">
+
+    <h2>📰 News & Events</h2>
+
+    <div class="news-grid">
+
+        <div class="news-card">
+            <h3>Breaking News</h3>
+            <p>Latest crypto and market news will appear here.</p>
+        </div>
+
+        <div class="news-card">
+            <h3>Economic Events</h3>
+            <p>FOMC, CPI, Interest Rate, NFP and other important events.</p>
+        </div>
+
+        <div class="news-card">
+            <h3>Market Updates</h3>
+            <p>Daily AI market outlook and important announcements.</p>
+        </div>
+        <div id="newsContainer"></div>
+
+    </div>
+
+<section class="economic-events">
+
+    <div class="events-header">
+
+        <div>
+            <h2>📅 Economic Events</h2>
+            <p>
+                Important economic events that can affect crypto markets
+            </p>
+        </div>
+
+        <button id="refreshEventsBtn">
+            🔄 Refresh
+        </button>
+
+    </div>
+
+
+    <div class="event-filters">
+
+        <button class="event-filter active" data-impact="ALL">
+            All
+        </button>
+
+        <button class="event-filter" data-impact="HIGH">
+            🔴 High Impact
+        </button>
+
+        <button class="event-filter" data-impact="MEDIUM">
+            🟠 Medium Impact
+        </button>
+
+        <button class="event-filter" data-impact="LOW">
+            🟢 Low Impact
+        </button>
+
+    </div>
+
+
+    <div id="economicEventsContainer">
+
+    <div class="event-card">
+
+        <h3>📅 Loading Economic Events...</h3>
+
+        <p>
+            AlphaMind AI is loading economic events.
+        </p>
+
+    </div>
+
+</div>
+</section>
+
+
+
+    <section class="gainers-losers">
+
+    <h2>🔥 Top Gainers & Losers</h2>
+
+    <div class="gainers-grid">
+
+        <div class="gainers-card">
+            <h3>🟢 Top Gainers</h3>
+            <div id="gainersList">
+                Loading...
+            </div>
+        </div>
+
+        <div class="gainers-card">
+            <h3>🔴 Top Losers</h3>
+            <div id="losersList">
+                Loading...
+            </div>
+        </div>
+
+    </div>
+    <section class="market-stats">
+
+<h2>🌍 Global Crypto Market</h2>
+
+<div class="stats-grid">
+
+<div class="stat-card">
+<h3>Fear & Greed</h3>
+<p id="fearGreed">Loading...</p>
+</div>
+
+<div class="stat-card">
+<h3>BTC Dominance</h3>
+<p id="btcDominance">Loading...</p>
+</div>
+
+<div class="stat-card">
+<h3>Market Cap</h3>
+<p id="marketCap">Loading...</p>
+</div>
+
+<div class="stat-card">
+<h3>Trending Coin</h3>
+<p id="trendingCoin">Loading...</p>
+</div>
+
+</div>
+<section class="ai-dashboard">
+
+<h2>🤖 AlphaMind AI Dashboard</h2>
+
+<div class="dashboard-grid">
+
+<div class="dashboard-card">
+<h3>Signal</h3>
+<p id="aiSignal">BUY 🟢</p>
+</div>
+
+<div class="dashboard-card">
+<h3>Trend</h3>
+<p id="aiTrend">Strong Bullish</p>
+</div>
+
+<div class="dashboard-card">
+<h3>Confidence</h3>
+<p id="aiConfidence">94%</p>
+</div>
+
+<div class="dashboard-card">
+<h3>Risk</h3>
+<p id="aiRisk">Low</p>
+</div>
+
+<div class="dashboard-card">
+<h3>Risk : Reward</h3>
+<p id="aiRR">1 : 3</p>
+</div>
+
+<div class="dashboard-card">
+<h3>Volume</h3>
+<p id="aiVolume">High</p>
+</div>
+
+</div>
+
+</section>
+</section>
+
+</section>
+    <section class="pricing">
+
+    <h2>Choose Your Plan</h2>
+    <p>Start with a 7-Day Free Trial</p>
+
+    <div class="pricing-grid">
+
+        <div class="plan">
+            <h3>Basic</h3>
+            <h1>₹499</h1>
+            <p>30 Days</p>
+
+            <ul>
+                <li>✔ AI Scanner</li>
+                <li>✔ Live Market</li>
+                <li>✔ News</li>
+                <li>❌ Telegram Alerts</li>
+            </ul>
+
+            <button id="basicPlanBtn">Choose Plan</button>
+        </div>
+
+        <div class="plan premium">
+            <span class="best">Most Popular</span>
+
+            <h3>Premium</h3>
+            <h1>₹799</h1>
+            <p>30 Days</p>
+
+            <ul>
+                <li>✔ All Features</li>
+                <li>✔ Telegram Alerts</li>
+                <li>✔ AI Scanner</li>
+                <li>✔ Strategy Backtest</li>
+            </ul>
+
+            <button id="premiumPlanBtn">Start Free Trial</button>
+        </div>
+
+        <div class="plan">
+            <h3>Pro</h3>
+            <h1>₹1499</h1>
+            <p>60 Days</p>
+
+            <ul>
+                <li>✔ All Features</li>
+                <li>✔ Telegram Alerts</li>
+                <li>✔ AI Scanner</li>
+                <li>✔ Priority Support</li>
+            </ul>
+
+           <button id="proPlanBtn">Choose Plan</button>
+        </div>
+
+
+    </div>
+
+</section>
+    </div>
+
+</section>
+<script src="https://s3.tradingview.com/tv.js"></script>
+<script src="script.js"></script>
+<script type="module" src="firebase-auth.js"></script>
+
+<section class="trade-setup">
+
+<h2>🎯 Trade Setup</h2>
+
+<div class="trade-grid">
+
+<div class="trade-card">
+<h3>Entry</h3>
+<p id="entry">118500</p>
+</div>
+
+<div class="trade-card">
+<h3>Stop Loss</h3>
+<p id="stoploss">117800</p>
+</div>
+
+<div class="trade-card">
+<h3>Target 1</h3>
+<p id="target1">119800</p>
+</div>
+
+<div class="trade-card">
+<h3>Target 2</h3>
+<p id="target2">120500</p>
+</div>
+
+</div>
+
+</section>
+</body>
+</html>
+

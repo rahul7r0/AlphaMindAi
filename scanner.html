@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Scanner | AlphaMind AI</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>📊 AI Scanner</h1>
+
+        <p>Welcome to AlphaMind AI Scanner</p>
+        <hr>
+
+       <div class="signal-header">
+    <span id="signalBadge">MARKET SCANNING 🟡</span>
+</div>
+
+<p id="signalStatus">
+    Waiting for a high-quality trade setup...
+</p>
+        <div class="scanner-card">
+
+      <div class="scanner-header">
+
+    <div class="pair-section">
+        <h3>BTC/USDT</h3>
+        <p>Pair : BTC/USDT</p>
+    </div>
+
+    <div class="price-section">
+        <h2 id="livePrice">$0.00</h2>
+        <p id="lastUpdate">Last Update : --</p>
+    </div>
+
+</div>
+
+
+<div class="signal-box">
+
+    <p id="signal">Signal : No Signal</p>
+
+    <p id="marketStrength">
+        Market Strength : Loading...
+    </p>
+
+    <p id="confidence">
+        Confidence : 0%
+    </p>
+
+</div>
+
+
+<div class="trade-grid">
+
+    <p id="entry">Entry : --</p>
+
+    <p id="target">Target : --</p>
+
+    <p id="stoploss">Stop Loss : --</p>
+
+    <p id="riskReward">Risk Reward : --</p>
+
+    <p id="timeframe">Timeframe : 15m</p>
+
+</div>
+        <div class="indicator-grid">
+
+    <p id="ema9">EMA 9 : Loading...</p>
+
+    <p id="ema20">EMA 20 : Loading...</p>
+
+    <p id="rsi">RSI : Loading...</p>
+
+    <p id="adx">ADX : Loading...</p>
+
+    <p id="atr">ATR : Loading...</p>
+
+    <p id="macd">MACD : Loading...</p>
+
+    <p id="support">Support : Loading...</p>
+
+    <p id="resistance">Resistance : Loading...</p>
+
+</div>
+       <div class="status-grid">
+
+    <p id="volume">Volume : Loading...</p>
+
+    <p id="breakout">Breakout : Loading...</p>
+
+    <p id="trend">Trend : Loading...</p>
+
+    <p id="recommendation">Recommendation : Loading...</p>
+
+    <p id="aiScore">AI Score : 0/100</p>
+
+    <p id="strategy">Strategy : Loading...</p>
+
+    <p id="pattern">Candlestick : Loading...</p>
+
+    <p id="riskLevel">Risk Level : Loading...</p>
+
+</div>
+        <p id="trend15m">15m Trend : Loading...</p>
+        <p id="trend30m">30m Trend : Loading...</p>
+        <p id="trend1h">1H Trend : Loading...</p>
+        <p id="trend4h">4H Trend : Loading...</p>
+        <p id="multiTrend">Multi Timeframe : Loading...</p>
+        <p id="marketStatus">Market Status : Sideways 🟡</p>
+        
+        <hr>
+
+       <button id="scanBtn">
+     🚀 Scan Market
+       </button>
+
+       <!-- ================================
+     TRADE PERFORMANCE ANALYZER
+    ================================ -->
+
+<div class="performance-card">
+
+    <h2>📊 Trade Performance</h2>
+
+    <div class="performance-grid">
+
+        <div>
+            <span>Total Trades</span>
+            <strong id="totalTrades">0</strong>
+        </div>
+
+        <div>
+            <span>Wins</span>
+            <strong id="winningTrades">0</strong>
+        </div>
+
+        <div>
+            <span>Losses</span>
+            <strong id="losingTrades">0</strong>
+        </div>
+
+        <div>
+            <span>Win Rate</span>
+            <strong id="winRate">0%</strong>
+        </div>
+
+        <div>
+            <span>BUY Accuracy</span>
+            <strong id="buyAccuracy">0%</strong>
+        </div>
+
+        <div>
+            <span>SELL Accuracy</span>
+            <strong id="sellAccuracy">0%</strong>
+        </div>
+
+    </div>
+
+    <div class="performance-summary">
+
+        <p id="aiScoreAccuracy">
+            🤖 AI Score Accuracy : 0%
+        </p>
+
+        <p id="confidenceAccuracy">
+            🎯 Confidence Accuracy : 0%
+        </p>
+
+        <p id="performanceStatus">
+            📊 Waiting for trade data...
+        </p>
+
+    </div>
+
+    <div class="trade-result-buttons">
+
+    <button id="markWinBtn">
+        🟢 Mark WIN
+    </button>
+
+    <button id="markLossBtn">
+        🔴 Mark LOSS
+    </button>
+
+</div>
+<button id="resetPerformanceBtn" class="reset-performance-btn">
+    🔄 Reset Performance
+</button>
+</div>
+
+<!-- ================================
+     PENDING TRADE
+================================ -->
+
+<div class="pending-trade-panel" id="pendingTradePanel">
+
+    <h2>📌 Pending Trade</h2>
+
+    <p id="pendingSignal">Signal : --</p>
+    <p id="pendingEntry">Entry : --</p>
+    <p id="pendingTarget">Target : --</p>
+    <p id="pendingStopLoss">Stop Loss : --</p>
+    <p id="pendingScore">AI Score : --</p>
+    <p id="pendingConfidence">Confidence : --</p>
+
+</div>
+
+<!-- ================================
+     TRADE HISTORY
+================================ -->
+
+<div class="trade-history-panel">
+
+    <h2>📜 Trade History</h2>
+
+    <div id="tradeHistoryList">
+
+        <p>No completed trades yet.</p>
+
+    </div>
+
+</div>
+
+        <p>AI Buy/Sell Signals will appear here.</p>
+
+    </div>
+    <div class="bottom-nav">
+
+    <div class="nav-item active">
+        <span>🏠</span>
+        <p>Home</p>
+    </div>
+
+    <div class="nav-item">
+        <span>📊</span>
+        <p>Scanner</p>
+    </div>
+
+    <div class="nav-item">
+        <span>📰</span>
+        <p>News</p>
+    </div>
+
+    <div class="nav-item">
+        <span>🔔</span>
+        <p>Alerts</p>
+    </div>
+
+    <div class="nav-item">
+        <span>👤</span>
+        <p>Profile</p>
+    </div>
+
+</div>
+
+ <script type="module" src="scanner.js"></script>
+</body>
+
+</html>
