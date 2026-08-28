@@ -1757,3 +1757,21 @@ nav a:hover{
     }
 
 }
+
+.timeframe-selector {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.timeframe-btn {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #f5f5f5;
+    cursor: pointer;
+}
+
+.timeframe-btn.active {
+    font-weight: bold;
+}
