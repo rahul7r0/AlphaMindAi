@@ -282,11 +282,13 @@ async function getBTCPrice() {
     selectedSymbol.replace("USDT", "/USDT");
     document.getElementById("scannerPairText").textContent =
     "Pair : " + selectedSymbol.replace("USDT", "/USDT");
+const selectedTimeframe =
+    localStorage.getItem("alphaMindSelectedTimeframe") || "15m";
 
     try {
 
         const klineResponse = await fetch(
-    `${CONFIG.API_BASE}/api/v3/klines?symbol=${selectedSymbol}&interval=${CONFIG.INTERVAL}&limit=${CONFIG.LIMIT}`
+    `${CONFIG.API_BASE}/api/v3/klines?symbol=${selectedSymbol}&interval=${selectedTimeframe}&limit=${CONFIG.LIMIT}`
 );
 
     const klines = await klineResponse.json();
@@ -624,6 +626,10 @@ else if (
 }
 
         console.log(data);
+
+    document.getElementById("timeframe").textContent =
+    "Timeframe : " + selectedTimeframe;
+
         document.getElementById("livePrice").textContent =
      "$" + Number(data.price).toLocaleString(undefined, {
     minimumFractionDigits: 2,
@@ -1029,6 +1035,26 @@ else {
     signalBadge.style.borderColor = "#eab308";
 
     signalStatus.textContent = "Waiting for a high-quality trade setup... 🟡";
+}
+
+// ================================
+// FINAL SIGNAL SAFETY FILTER
+// ================================
+
+if (
+    finalSignal.includes("BUY") &&
+    trend1h === "Bearish 🔴" &&
+    trend4h === "Bearish 🔴"
+) {
+    finalSignal = "NO SIGNAL 🟡";
+}
+
+else if (
+    finalSignal.includes("SELL") &&
+    trend1h === "Bullish 🟢" &&
+    trend4h === "Bullish 🟢"
+) {
+    finalSignal = "NO SIGNAL 🟡";
 }
 
   document.getElementById("signal").textContent =
@@ -1836,6 +1862,28 @@ cryptoItems.forEach(item => {
 
         getBTCPrice();
 
+    });
+
+});
+
+document.querySelectorAll(".timeframe-btn").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        document.querySelectorAll(".timeframe-btn").forEach(btn => {
+            btn.classList.remove("active");
+        });
+
+        button.classList.add("active");
+
+        const selectedTimeframe = button.dataset.timeframe;
+
+        localStorage.setItem(
+            "alphaMindSelectedTimeframe",
+            selectedTimeframe
+        );
+
+        console.log("Selected Timeframe:", selectedTimeframe);
     });
 
 });
