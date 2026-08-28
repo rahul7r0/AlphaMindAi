@@ -772,109 +772,102 @@ if (signal === "NO SIGNAL") {
         "Entry : --";
 
 }
-   let targetPrice;
-
-if (signal === "BUY 🟢") {
-
-    targetPrice = Number(data.price) + (atr * 4);
-
-}
-else if (signal === "SELL 🔴") {
-
-    targetPrice = Number(data.price) - (atr * 4);
-
-}
-if (signal === "NO SIGNAL") {
-
-    document.getElementById("target").textContent =
-    "Target : --";
-
-}
-else {
-
-    document.getElementById("target").textContent =
-    "Target : $" + targetPrice.toLocaleString(undefined,{
-        minimumFractionDigits:2,
-        maximumFractionDigits:2
-    });
-
-}
-    let stopLoss;
-
-if (signal === "BUY 🟢") {
-
-    stopLoss = Number(data.price) - (atr * 2);
-
-}
-else if (signal === "SELL 🔴") {
-
-    stopLoss = Number(data.price) + (atr * 2);
-
-}
-if(signal==="NO SIGNAL"){
-
-document.getElementById("stoploss").textContent =
-"Stop Loss : --";
-
-}
-let reward;
-let risk;
-
-if (signal === "BUY 🟢") {
-
-    reward = targetPrice - Number(data.price);
-    risk = Number(data.price) - stopLoss;
-
-}
-else if (signal === "SELL 🔴") {
-
-    reward = Number(data.price) - targetPrice;
-    risk = stopLoss - Number(data.price);
-
-}
-else{
-
-reward=0;
-
-risk=1;
-
-}
-
+  let targetPrice = null;
+let stopLoss = null;
+let reward = 0;
+let risk = 0;
 let riskReward = "--";
 
-if (signal !== "NO SIGNAL") {
+const activeTrade =
+    signal === "BUY 🟢" ||
+    signal === "SELL 🔴";
 
-    riskReward = (reward / risk).toFixed(2);
+if (activeTrade) {
 
-}
- if (signal !== "NO SIGNAL") {
+    const currentPrice = Number(data.price);
 
+    // Target
+    if (signal === "BUY 🟢") {
+        targetPrice = currentPrice + (atr * 4);
+    }
+    else if (signal === "SELL 🔴") {
+        targetPrice = currentPrice - (atr * 4);
+    }
+
+    // Stop Loss
+    if (signal === "BUY 🟢") {
+        stopLoss = currentPrice - (atr * 2);
+    }
+    else if (signal === "SELL 🔴") {
+        stopLoss = currentPrice + (atr * 2);
+    }
+
+    // Risk / Reward
+    if (signal === "BUY 🟢") {
+
+        reward = targetPrice - currentPrice;
+        risk = currentPrice - stopLoss;
+
+    }
+    else if (signal === "SELL 🔴") {
+
+        reward = currentPrice - targetPrice;
+        risk = stopLoss - currentPrice;
+
+    }
+
+    if (risk > 0) {
+        riskReward = (reward / risk).toFixed(2);
+    }
+
+    // Entry
+    document.getElementById("entry").textContent =
+        "Entry : $" + currentPrice.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+    // Target
+    document.getElementById("target").textContent =
+        "Target : $" + targetPrice.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+    // Stop Loss
     document.getElementById("stoploss").textContent =
-    "Stop Loss : $" + stopLoss.toLocaleString(undefined, {
-        minimumFractionDigits:2,
-        maximumFractionDigits:2
-    });
+        "Stop Loss : $" + stopLoss.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
 
-}
-
-   if (signal === "NO SIGNAL") {
-
+    // Risk Reward
     document.getElementById("riskReward").textContent =
-    "Risk Reward : --";
+        "Risk Reward : 1 : " + riskReward;
 
 }
 else {
 
-    document.getElementById("riskReward").textContent =
-    "Risk Reward : 1 : " + riskReward;
+    // NO SIGNAL = NO TRADE LEVELS
 
+    document.getElementById("entry").textContent =
+        "Entry : --";
+
+    document.getElementById("target").textContent =
+        "Target : --";
+
+    document.getElementById("stoploss").textContent =
+        "Stop Loss : --";
+
+    document.getElementById("riskReward").textContent =
+        "Risk Reward : --";
 }
-     
-    document.getElementById("lastUpdate").textContent =
+
+document.getElementById("lastUpdate").textContent =
     "Last Update : " + new Date().toLocaleTimeString();
 
-    console.log("Final Confidence:", confidence);
-    console.log("Final AI Score:", aiScore);
+console.log("Final Confidence:", confidence);
+console.log("Final AI Score:", aiScore);
 
     // Reset when NO SIGNAL
 
