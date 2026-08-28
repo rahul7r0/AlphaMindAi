@@ -30,13 +30,57 @@
       <div class="scanner-header">
 
     <div class="pair-section">
-        <h3>BTC/USDT</h3>
-        <p>Pair : BTC/USDT</p>
+        <h3 id="scannerPair">BTC/USDT</h3>
+        <p id="scannerPairText">Pair : BTC/USDT</p>
     </div>
 
     <div class="price-section">
         <h2 id="livePrice">$0.00</h2>
         <p id="lastUpdate">Last Update : --</p>
+    </div>
+
+</div>
+
+<!-- ================================
+     CRYPTO WATCHLIST
+================================ -->
+
+<div class="crypto-watchlist">
+
+    <h2>🪙 Crypto Watchlist</h2>
+
+    <div class="watchlist-grid">
+
+        <button class="crypto-item active" data-symbol="BTCUSDT">
+            <strong>BTC</strong>
+            <span id="watch-BTCUSDT">Loading...</span>
+        </button>
+
+        <button class="crypto-item" data-symbol="ETHUSDT">
+            <strong>ETH</strong>
+            <span id="watch-ETHUSDT">Loading...</span>
+        </button>
+
+        <button class="crypto-item" data-symbol="SOLUSDT">
+            <strong>SOL</strong>
+            <span id="watch-SOLUSDT">Loading...</span>
+        </button>
+
+        <button class="crypto-item" data-symbol="XRPUSDT">
+            <strong>XRP</strong>
+            <span id="watch-XRPUSDT">Loading...</span>
+        </button>
+
+        <button class="crypto-item" data-symbol="BNBUSDT">
+            <strong>BNB</strong>
+            <span id="watch-BNBUSDT">Loading...</span>
+        </button>
+
+        <button class="crypto-item" data-symbol="DOGEUSDT">
+            <strong>DOGE</strong>
+            <span id="watch-DOGEUSDT">Loading...</span>
+        </button>
+
     </div>
 
 </div>
