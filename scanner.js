@@ -277,11 +277,16 @@ function calculateADX(klines, period = 14) {
 }
 
 async function getBTCPrice() {
+        const selectedSymbol = localStorage.getItem("alphaMindSelectedSymbol") || CONFIG.SYMBOL;
+        document.getElementById("scannerPair").textContent =
+    selectedSymbol.replace("USDT", "/USDT");
+    document.getElementById("scannerPairText").textContent =
+    "Pair : " + selectedSymbol.replace("USDT", "/USDT");
 
     try {
 
         const klineResponse = await fetch(
-    `${CONFIG.API_BASE}/api/v3/klines?symbol=${CONFIG.SYMBOL}&interval=${CONFIG.INTERVAL}&limit=${CONFIG.LIMIT}`
+    `${CONFIG.API_BASE}/api/v3/klines?symbol=${selectedSymbol}&interval=${CONFIG.INTERVAL}&limit=${CONFIG.LIMIT}`
 );
 
     const klines = await klineResponse.json();
@@ -289,7 +294,7 @@ async function getBTCPrice() {
     // 30 Minute Data
 
 const response30m = await fetch(
-`${CONFIG.API_BASE}/api/v3/klines?symbol=${CONFIG.SYMBOL}&interval=30m&limit=50`
+`${CONFIG.API_BASE}/api/v3/klines?symbol=${selectedSymbol}&interval=30m&limit=50`
 );
 
 const klines30m = await response30m.json();
@@ -303,7 +308,7 @@ const ema20_30m = calculateEMA(close30m, 20);
 // 1 Hour Data
 
 const response1h = await fetch(
-`${CONFIG.API_BASE}/api/v3/klines?symbol=${CONFIG.SYMBOL}&interval=1h&limit=50`
+`${CONFIG.API_BASE}/api/v3/klines?symbol=${selectedSymbol}&interval=1h&limit=50`
 );
 
 const klines1h = await response1h.json();
@@ -318,7 +323,7 @@ const ema20_1h = calculateEMA(close1h, 20);
 // 4 Hour Data
 
 const response4h = await fetch(
-`${CONFIG.API_BASE}/api/v3/klines?symbol=${CONFIG.SYMBOL}&interval=4h&limit=50`
+`${CONFIG.API_BASE}/api/v3/klines?symbol=${selectedSymbol}&interval=4h&limit=50`
 );
 
 const klines4h = await response4h.json();
@@ -560,7 +565,7 @@ if (macd < 0 && signal === "SELL 🔴") {
 }
 
         const response = await fetch(
-            `${CONFIG.API_BASE}/api/v3/ticker/price?symbol=${CONFIG.SYMBOL}`
+            `${CONFIG.API_BASE}/api/v3/ticker/price?symbol=${selectedSymbol}`
         );
 
         const data = await response.json();
@@ -1741,3 +1746,96 @@ localStorage.setItem(
 );
 
 displayTradeHistory();
+
+// ================================
+// CRYPTO WATCHLIST LIVE PRICES
+// ================================
+
+const watchlistSymbols = [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "BNBUSDT",
+    "DOGEUSDT"
+];
+
+async function updateWatchlist() {
+
+    for (const symbol of watchlistSymbols) {
+
+        try {
+
+            const response = await fetch(
+                `${CONFIG.API_BASE}/api/v3/ticker/price?symbol=${symbol}`
+            );
+
+            const data = await response.json();
+
+            const priceElement =
+                document.getElementById(`watch-${symbol}`);
+
+            if (priceElement) {
+
+                priceElement.textContent =
+                    "$" + Number(data.price).toLocaleString(
+                        undefined,
+                        {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        }
+                    );
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "Watchlist error:",
+                symbol,
+                error
+            );
+
+        }
+
+    }
+
+}
+
+updateWatchlist();
+
+setInterval(updateWatchlist, 5000);
+
+// ================================
+// WATCHLIST COIN SELECTION
+// ================================
+
+const cryptoItems = document.querySelectorAll(".crypto-item");
+
+cryptoItems.forEach(item => {
+
+    item.addEventListener("click", () => {
+
+        const symbol = item.dataset.symbol;
+
+        localStorage.setItem(
+            "alphaMindSelectedSymbol",
+            symbol
+        );
+
+        cryptoItems.forEach(button => {
+            button.classList.remove("active");
+        });
+
+        item.classList.add("active");
+
+        console.log(
+            "Selected Crypto:",
+            symbol
+        );
+
+        getBTCPrice();
+
+    });
+
+});
