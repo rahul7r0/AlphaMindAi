@@ -484,87 +484,168 @@ else {
     volumeStatus = "Normal 🟡";
 
 }
-// AI Score based on Volume
+// ================================
+// VOLUME SCORE + CONFIDENCE
+// ================================
+
 if (volumeStatus === "High 🟢") {
 
     aiScore += 10;
+    confidence += 20;
 
 }
 else if (volumeStatus === "Normal 🟡") {
 
-    aiScore += 10;
-// Volume Confidence
-
-if (volumeStatus === "High 🟢") {
-
-    confidence += 20;
-
-}
-else {
-
+    aiScore += 5;
     confidence += 10;
 
 }
+else if (volumeStatus === "Low 🔴") {
+
+    confidence += 5;
+
 }
 
 
-if (ema9 > ema20 && rsi > 55 && adx > 25) {
+// ================================
+// SIGNAL GENERATION - UPGRADED
+// ================================
+
+let buyScore = 0;
+let sellScore = 0;
+
+
+// ================================
+// BUY CONDITIONS
+// ================================
+
+if (ema9 > ema20) {
+    buyScore += 25;
+}
+
+if (rsi > 52) {
+    buyScore += 15;
+}
+
+if (adx > 20) {
+    buyScore += 15;
+}
+
+if (macd > 0) {
+    buyScore += 15;
+}
+
+if (volumeStatus === "High 🟢") {
+    buyScore += 10;
+}
+
+
+// ================================
+// SELL CONDITIONS
+// ================================
+
+if (ema9 < ema20) {
+    sellScore += 25;
+}
+
+if (rsi < 48) {
+    sellScore += 15;
+}
+
+if (adx > 20) {
+    sellScore += 15;
+}
+
+if (macd < 0) {
+    sellScore += 15;
+}
+
+if (volumeStatus === "High 🟢") {
+    sellScore += 10;
+}
+
+
+// ================================
+// FINAL SIGNAL
+// ================================
+
+if (
+    buyScore >= 55 &&
+    buyScore > sellScore
+) {
 
     signal = "BUY 🟢";
-   aiScore += 25;
+
+    aiScore = Math.min(
+        60 + buyScore,
+        100
+    );
+
+    confidence = Math.min(
+        50 + buyScore / 2,
+        100
+    );
+
     trend = "Bullish 🟢";
-    recommendation = "Strong Buy 🟢";
-    riskLevel = "Low 🟢";
-    marketStrength = "Strong Bullish 🟢";
-   aiScore += 5;
+    recommendation = "Buy Confirmation 🟢";
+    riskLevel = "Medium 🟡";
+    marketStrength = "Bullish 🟢";
     strategy = "Trend Following Buy 🟢";
 
 }
 
-    else if (ema9 < ema20 && rsi < 45 && adx > 25) {
-
-    signal = "SELL 🔴";
-   aiScore += 25;
-     trend = "Bearish 🔴";
-     recommendation = "Strong Sell 🔴";
-     riskLevel = "High 🔴";
-     marketStrength = "Strong Bearish 🔴";
-     aiScore += 5;
-     strategy = "Trend Following Sell 🔴";
-
-   }
-
-   // EMA Confidence
-
-if (ema9 > ema20 || ema9 < ema20) {
-
-    confidence += 20;
-
-}
-   // MACD Confirmation
-
-if (macd > 0 && signal === "BUY 🟢") {
-
-   aiScore += 5;
-
-}
-
-// MACD Confidence
-
-if (
-    (macd > 0 && signal === "BUY 🟢") ||
-    (macd < 0 && signal === "SELL 🔴")
+else if (
+    sellScore >= 55 &&
+    sellScore > buyScore
 ) {
 
-    confidence += 20;
+    signal = "SELL 🔴";
+
+    aiScore = Math.min(
+        60 + sellScore,
+        100
+    );
+
+    confidence = Math.min(
+        50 + sellScore / 2,
+        100
+    );
+
+    trend = "Bearish 🔴";
+    recommendation = "Sell Confirmation 🔴";
+    riskLevel = "Medium 🟡";
+    marketStrength = "Bearish 🔴";
+    strategy = "Trend Following Sell 🔴";
 
 }
 
-if (macd < 0 && signal === "SELL 🔴") {
+else {
 
-    aiScore += 5;
+    signal = "NO SIGNAL";
+
+    aiScore = 45;
+    confidence = 40;
+
+    recommendation = "Wait for Better Setup 🟡";
+    riskLevel = "Medium 🟡";
+    strategy = "Wait for Confirmation 🟡";
 
 }
+
+
+// ================================
+// SAFETY LIMIT
+// ================================
+
+aiScore = Math.max(
+    0,
+    Math.min(aiScore, 100)
+);
+
+confidence = Math.max(
+    0,
+    Math.min(confidence, 100)
+);
 
         const response = await fetch(
             `${CONFIG.API_BASE}/api/v3/ticker/price?symbol=${selectedSymbol}`
@@ -869,123 +950,99 @@ document.getElementById("lastUpdate").textContent =
 console.log("Final Confidence:", confidence);
 console.log("Final AI Score:", aiScore);
 
-    // Reset when NO SIGNAL
 
-if (signal === "NO SIGNAL") {
-
-    confidence = 30;
-    aiScore = 40;
-
-}
 
 // Final signal processing starts after all base calculations
 
-// ================================
-// COUNTER TREND PROTECTION
-// ================================
-
 let finalSignal = signal;
 
-if (
-    signal === "BUY 🟢" &&
-    (trend1h === "Bearish 🔴" || trend4h === "Bearish 🔴")
-) {
 
-    finalSignal = "BUY (Counter Trend) ⚠️";
-
-}
-
-else if (
-    signal === "SELL 🔴" &&
-    (trend1h === "Bullish 🟢" || trend4h === "Bullish 🟢")
-) {
-
-    finalSignal = "SELL (Counter Trend) ⚠️";
-
-}
-
-// Strong protection:
-// Counter-trend signals get lower score and confidence
-
-if (finalSignal === "BUY (Counter Trend) ⚠️") {
-
-    aiScore -= 20;
-    confidence -= 15;
-
-}
-
-else if (finalSignal === "SELL (Counter Trend) ⚠️") {
-
-    aiScore -= 20;
-    confidence -= 15;
-
-}
-
-// Safety limits
-aiScore = Math.max(0, Math.min(aiScore, 100));
-confidence = Math.max(0, Math.min(confidence, 100));
-
-
-// Higher Timeframe Filter
-
-if (
-    signal === "SELL 🔴" &&
-    (trend1h === "Bullish 🟢" || trend4h === "Bullish 🟢")
-) {
-
-    aiScore -= 15;
-    confidence -= 10;
-    recommendation = "Counter Trend Sell ⚠️";
-    strategy = "Counter Trend Sell ⚠️";
-
-}
-
-else if (
-    signal === "BUY 🟢" &&
-    (trend1h === "Bearish 🔴" || trend4h === "Bearish 🔴")
-) {
-
-    aiScore -= 15;
-    confidence -= 10;
-    recommendation = "Counter Trend Buy ⚠️";
-    strategy = "Counter Trend Buy ⚠️";
-    
-
-}
-
-// Safety Limit
-
-aiScore = Math.max(0, Math.min(aiScore, 100));
-confidence = Math.max(0, Math.min(confidence, 100));
 
 // ================================
 // HIGHER TIMEFRAME CONFLICT PROTECTION
+// UPGRADED
 // ================================
 
+// Higher timeframe conflict = penalty
+// Signal completely cancel nahi hoga.
+
 if (
-    (finalSignal.includes("BUY") &&
-        (trend1h === "Bearish 🔴" || trend4h === "Bearish 🔴")) ||
-
-    (finalSignal.includes("SELL") &&
-        (trend1h === "Bullish 🟢" || trend4h === "Bullish 🟢"))
+    finalSignal.includes("BUY") &&
+    trend1h === "Bearish 🔴"
 ) {
+    aiScore -= 8;
+    confidence -= 5;
 
-    finalSignal = "NO SIGNAL 🟡";
-
-    recommendation = "Higher Timeframe Conflict 🟡";
-    strategy = "Wait for 1H / 4H Confirmation 🟡";
-    riskLevel = "High 🔴";
-
-    localStorage.removeItem("alphaMindPendingTrade");
+    recommendation = "Buy Against 1H Trend ⚠️";
+    strategy = "Short-Term Buy / Higher TF Conflict ⚠️";
+    riskLevel = "Medium 🟡";
 }
 
-// ================================
-// FINAL AI SCORE QUALITY FILTER
-// ================================
+if (
+    finalSignal.includes("BUY") &&
+    trend4h === "Bearish 🔴"
+) {
+    aiScore -= 8;
+    confidence -= 5;
+
+    recommendation = "Buy Against 4H Trend ⚠️";
+    strategy = "Short-Term Buy / Higher TF Conflict ⚠️";
+    riskLevel = "Medium 🟡";
+}
+
 
 if (
-    (finalSignal.includes("BUY") || finalSignal.includes("SELL")) &&
-    aiScore < 80
+    finalSignal.includes("SELL") &&
+    trend1h === "Bullish 🟢"
+) {
+    aiScore -= 8;
+    confidence -= 5;
+
+    recommendation = "Sell Against 1H Trend ⚠️";
+    strategy = "Short-Term Sell / Higher TF Conflict ⚠️";
+    riskLevel = "Medium 🟡";
+}
+
+if (
+    finalSignal.includes("SELL") &&
+    trend4h === "Bullish 🟢"
+) {
+    aiScore -= 8;
+    confidence -= 5;
+
+    recommendation = "Sell Against 4H Trend ⚠️";
+    strategy = "Short-Term Sell / Higher TF Conflict ⚠️";
+    riskLevel = "Medium 🟡";
+}
+
+
+// ================================
+// FINAL SCORE LIMIT
+// ================================
+
+aiScore = Math.max(
+    0,
+    Math.min(aiScore, 100)
+);
+
+confidence = Math.max(
+    0,
+    Math.min(confidence, 100)
+);
+
+
+// ================================
+// FINAL AI SCORE FILTER
+// ================================
+
+// Sirf bahut weak signals ko reject karo.
+// Pehle 80 se neeche sab reject ho rahe the.
+// Ab threshold 65 hai.
+
+if (
+    (finalSignal.includes("BUY") ||
+     finalSignal.includes("SELL")) &&
+    aiScore < 65
 ) {
 
     finalSignal = "NO SIGNAL 🟡";
@@ -994,41 +1051,25 @@ if (
     strategy = "Wait for Confirmation 🟡";
     riskLevel = "High 🔴";
 
-    localStorage.removeItem("alphaMindPendingTrade");
+    localStorage.removeItem(
+        "alphaMindPendingTrade"
+    );
 }
 
-const signalBadge = document.getElementById("signalBadge");
-const signalStatus = document.getElementById("signalStatus");
 
-if (finalSignal.includes("BUY")) {
+// ================================
+// FINAL SCORE LIMIT AGAIN
+// ================================
 
-    signalBadge.textContent = "BUY SIGNAL 🟢";
-    signalBadge.style.background = "#16a34a";
-    signalBadge.style.color = "white";
-    signalBadge.style.borderColor = "#22c55e";
+aiScore = Math.max(
+    0,
+    Math.min(aiScore, 100)
+);
 
-    signalStatus.textContent = "Strong BUY setup detected. Check entry and risk management. 🟢";
-
-}
-else if (finalSignal.includes("SELL")) {
-
-    signalBadge.textContent = "SELL SIGNAL 🔴";
-    signalBadge.style.background = "#dc2626";
-    signalBadge.style.color = "white";
-    signalBadge.style.borderColor = "#ef4444";
-
-    signalStatus.textContent = "Strong SELL setup detected. Check entry and risk management. 🔴";
-
-}
-else {
-
-    signalBadge.textContent = "NO SIGNAL 🟡";
-    signalBadge.style.background = "#854d0e";
-    signalBadge.style.color = "white";
-    signalBadge.style.borderColor = "#eab308";
-
-    signalStatus.textContent = "Waiting for a high-quality trade setup... 🟡";
-}
+confidence = Math.max(
+    0,
+    Math.min(confidence, 100)
+);
 
 // ================================
 // FINAL SIGNAL SAFETY FILTER
@@ -1050,8 +1091,94 @@ else if (
     finalSignal = "NO SIGNAL 🟡";
 }
 
+// ================================
+// NO SIGNAL FINAL RESET
+// ================================
+
+if (finalSignal === "NO SIGNAL 🟡") {
+
+    confidence = 0;
+    aiScore = 0;
+
+    recommendation = "Wait for Better Setup 🟡";
+    strategy = "Wait for Confirmation 🟡";
+    riskLevel = "High 🔴";
+
+}
+// ================================
+// SIGNAL BADGE
+// ================================
+
+const signalBadge =
+    document.getElementById("signalBadge");
+
+const signalStatus =
+    document.getElementById("signalStatus");
+
+
+if (finalSignal.includes("BUY")) {
+
+    signalBadge.textContent =
+        "BUY SIGNAL 🟢";
+
+    signalBadge.style.background =
+        "#16a34a";
+
+    signalBadge.style.color =
+        "white";
+
+    signalBadge.style.borderColor =
+        "#22c55e";
+
+    signalStatus.textContent =
+        "BUY setup detected. Check entry and risk management. 🟢";
+
+}
+
+else if (finalSignal.includes("SELL")) {
+
+    signalBadge.textContent =
+        "SELL SIGNAL 🔴";
+
+    signalBadge.style.background =
+        "#dc2626";
+
+    signalBadge.style.color =
+        "white";
+
+    signalBadge.style.borderColor =
+        "#ef4444";
+
+    signalStatus.textContent =
+        "SELL setup detected. Check entry and risk management. 🔴";
+
+}
+
+else {
+
+    signalBadge.textContent =
+        "NO SIGNAL 🟡";
+
+    signalBadge.style.background =
+        "#854d0e";
+
+    signalBadge.style.color =
+        "white";
+
+    signalBadge.style.borderColor =
+        "#eab308";
+
+    signalStatus.textContent =
+        "Waiting for a high-quality trade setup... 🟡";
+
+}
+
+
+
   document.getElementById("signal").textContent =
     "Signal : " + finalSignal;
+
+    signal = finalSignal;
 
     confidence = Math.min(confidence, 100);
 
@@ -1118,14 +1245,14 @@ else {
 
 }
 
-if (signal === "BUY 🟢" && distanceFromSupport < 100) {
+if (finalSignal.includes("BUY") && distanceFromSupport < 100) {
 
     recommendation = "Strong Buy Near Support 🟢";
     aiScore += 10;
 
 }
 
-if (signal === "SELL 🔴" && distanceFromResistance < 100) {
+if (finalSignal.includes("SELL") && distanceFromResistance < 100) {
 
     recommendation = "Strong Sell Near Resistance 🔴";
     aiScore += 10;
