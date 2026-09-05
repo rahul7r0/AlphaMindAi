@@ -336,6 +336,18 @@ const ema9_4h = calculateEMA(close4h, 9);
 
 const ema20_4h = calculateEMA(close4h, 20);
 
+const chartData = klines.map(candle => ({
+    time: Math.floor(Number(candle[0]) / 1000),
+    open: Number(candle[1]),
+    high: Number(candle[2]),
+    low: Number(candle[3]),
+    close: Number(candle[4])
+}));
+
+if (window.AlphaMindChart) {
+    window.AlphaMindChart.setData(chartData);
+}
+
     console.log("Klines:", klines);
     const closePrices = klines.map(candle => Number(candle[4]));
 
@@ -716,6 +728,12 @@ else if (
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
     });
+
+    document.getElementById("chartPriceLabel").textContent =
+"$" + Number(data.price).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+});
 
 
         document.getElementById("ema9").textContent =
