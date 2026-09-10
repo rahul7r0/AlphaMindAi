@@ -454,31 +454,22 @@ else if (ema9_4h < ema20_4h) {
 
      
 if (rsi > 55) {
-
-   aiScore += 15;
-
+    aiScore += 15;
 }
 else if (rsi < 45) {
-
-    aiScore += 15;
-
+    aiScore += 5;
 }
 else {
-
-    aiScore += 15;
-
+    aiScore += 0;
 }
+
 // RSI Confidence
 
 if (rsi > 55 || rsi < 45) {
-
     confidence += 20;
-
 }
 else {
-
     confidence += 10;
-
 }
 
 if (latestVolume > averageVolume * 1.5) {
@@ -539,8 +530,10 @@ if (rsi > 52) {
     buyScore += 15;
 }
 
-if (adx > 20) {
+if (adx > 20 && ema9 > ema20) {
+
     buyScore += 15;
+
 }
 
 if (macd > 0) {
@@ -564,7 +557,8 @@ if (rsi < 48) {
     sellScore += 15;
 }
 
-if (adx > 20) {
+if (adx > 20 && ema9 < ema20) {
+    
     sellScore += 15;
 }
 
@@ -582,19 +576,19 @@ if (volumeStatus === "High 🟢") {
 // ================================
 
 if (
-    buyScore >= 55 &&
+    buyScore >= 60 &&
     buyScore > sellScore
 ) {
 
     signal = "BUY 🟢";
 
     aiScore = Math.min(
-        60 + buyScore,
+        50 + buyScore / 2,
         100
     );
 
     confidence = Math.min(
-        50 + buyScore / 2,
+        45 + buyScore / 2,
         100
     );
 
@@ -607,19 +601,19 @@ if (
 }
 
 else if (
-    sellScore >= 55 &&
+    sellScore >= 60 &&
     sellScore > buyScore
 ) {
 
     signal = "SELL 🔴";
 
     aiScore = Math.min(
-        60 + sellScore,
+        50 + sellScore / 2,
         100
     );
 
     confidence = Math.min(
-        50 + sellScore / 2,
+        45 + sellScore / 2,
         100
     );
 
@@ -984,10 +978,18 @@ let finalSignal = signal;
 // Higher timeframe conflict = penalty
 // Signal completely cancel nahi hoga.
 
+let higherTimeframeConflicts = 0;
+
+
+// BUY vs Higher Timeframe
+
 if (
     finalSignal.includes("BUY") &&
     trend1h === "Bearish 🔴"
 ) {
+
+    higherTimeframeConflicts++;
+
     aiScore -= 8;
     confidence -= 5;
 
@@ -996,10 +998,14 @@ if (
     riskLevel = "Medium 🟡";
 }
 
+
 if (
     finalSignal.includes("BUY") &&
     trend4h === "Bearish 🔴"
 ) {
+
+    higherTimeframeConflicts++;
+
     aiScore -= 8;
     confidence -= 5;
 
@@ -1009,10 +1015,15 @@ if (
 }
 
 
+// SELL vs Higher Timeframe
+
 if (
     finalSignal.includes("SELL") &&
     trend1h === "Bullish 🟢"
 ) {
+
+    higherTimeframeConflicts++;
+
     aiScore -= 8;
     confidence -= 5;
 
@@ -1021,10 +1032,14 @@ if (
     riskLevel = "Medium 🟡";
 }
 
+
 if (
     finalSignal.includes("SELL") &&
     trend4h === "Bullish 🟢"
 ) {
+
+    higherTimeframeConflicts++;
+
     aiScore -= 8;
     confidence -= 5;
 
@@ -1033,6 +1048,19 @@ if (
     riskLevel = "Medium 🟡";
 }
 
+
+// Both Higher Timeframes are against the signal
+// Extra penalty, but signal is NOT cancelled.
+
+if (higherTimeframeConflicts === 2) {
+
+    aiScore -= 8;
+    confidence -= 5;
+
+    recommendation = "Higher TF Strong Conflict ⚠️";
+    strategy = "Short-Term Trade / Strong Higher TF Conflict ⚠️";
+    riskLevel = "High 🔴";
+}
 
 // ================================
 // FINAL SCORE LIMIT
@@ -1120,7 +1148,30 @@ if (finalSignal === "NO SIGNAL 🟡") {
 
     recommendation = "Wait for Better Setup 🟡";
     strategy = "Wait for Confirmation 🟡";
+    marketStrength = "Sideways 🟡";
     riskLevel = "High 🔴";
+
+    document.getElementById("marketStrength").textContent =
+    "Market Strength : " + marketStrength;
+
+document.getElementById("strategy").textContent =
+    "Strategy : " + strategy;
+
+document.getElementById("riskLevel").textContent =
+    "Risk Level : " + riskLevel;
+
+    // Clear old trade levels
+    document.getElementById("entry").textContent =
+        "Entry : --";
+
+    document.getElementById("target").textContent =
+        "Target : --";
+
+    document.getElementById("stoploss").textContent =
+        "Stop Loss : --";
+
+    document.getElementById("riskReward").textContent =
+        "Risk Reward : --";
 
 }
 // ================================
@@ -1240,16 +1291,12 @@ if (
 "Recommendation : " + recommendation;
 
 if (signal.includes("BUY")) {
-    tradeStats.buyWins++;
-}
 
     document.getElementById("marketStatus").textContent =
         "Market Status : Bullish 🟢";
 
-
-if (signal.includes("SELL")) {
-    tradeStats.sellWins++;
-
+}
+else if (signal.includes("SELL")) {
 
     document.getElementById("marketStatus").textContent =
         "Market Status : Bearish 🔴";
@@ -1259,7 +1306,6 @@ else {
 
     document.getElementById("marketStatus").textContent =
         "Market Status : Sideways 🟡";
-
 
 }
 
@@ -1490,9 +1536,42 @@ updatePerformanceAnalyzer();
 
 function savePendingTrade(signal, entry, target, stopLoss, aiScore, confidence) {
 
-   if (!signal.includes("BUY") && !signal.includes("SELL")) {
-    return;
-}
+    if (!signal.includes("BUY") && !signal.includes("SELL")) {
+        return;
+    }
+
+    // Existing pending trade check
+    const existingTrade = JSON.parse(
+        localStorage.getItem("alphaMindPendingTrade")
+    );
+
+    if (existingTrade && existingTrade.status === "PENDING") {
+
+        // Same direction + nearly same entry = duplicate signal
+        const sameSignal =
+            existingTrade.signal === signal;
+
+        const entryDifference =
+            Math.abs(
+                Number(existingTrade.entry) - Number(entry)
+            );
+
+        const entryPercentDifference =
+            (entryDifference / Number(entry)) * 100;
+
+        if (
+            sameSignal &&
+            entryPercentDifference < 0.20
+        ) {
+
+            console.log(
+                "DUPLICATE SIGNAL BLOCKED:",
+                signal
+            );
+
+            return;
+        }
+    }
 
     const pendingTrade = {
         id: Date.now(),
@@ -1511,7 +1590,10 @@ function savePendingTrade(signal, entry, target, stopLoss, aiScore, confidence) 
         JSON.stringify(pendingTrade)
     );
 
-    console.log("PENDING TRADE SAVED:", pendingTrade);
+    console.log(
+        "PENDING TRADE SAVED:",
+        pendingTrade
+    );
 }
 
 // ================================
