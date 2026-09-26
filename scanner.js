@@ -114,12 +114,56 @@ function calculateATR(klines, period = 14) {
 }
 function calculateMACD(prices) {
 
-    const ema12 = calculateEMA(prices, 12);
-    const ema26 = calculateEMA(prices, 26);
+    if (prices.length < 35) return null;
 
-    if (ema12 === null || ema26 === null) return null;
+    const ema12List = [];
+    const ema26List = [];
 
-    return ema12 - ema26;
+    for (let i = 0; i < prices.length; i++) {
+
+        const slice = prices.slice(0, i + 1);
+
+        const ema12 = calculateEMA(slice, 12);
+        const ema26 = calculateEMA(slice, 26);
+
+        if (ema12 !== null && ema26 !== null) {
+
+            ema12List.push(ema12);
+            ema26List.push(ema26);
+
+        }
+    }
+
+    if (ema12List.length < 9) return null;
+
+    const macdLineList = [];
+
+    for (let i = 0; i < ema12List.length; i++) {
+
+        macdLineList.push(
+            ema12List[i] - ema26List[i]
+        );
+
+    }
+
+    const signalLine = calculateEMA(
+        macdLineList,
+        9
+    );
+
+    if (signalLine === null) return null;
+
+    const macdLine =
+        macdLineList[macdLineList.length - 1];
+
+    const histogram =
+        macdLine - signalLine;
+
+    return {
+        macdLine: macdLine,
+        signalLine: signalLine,
+        histogram: histogram
+    };
 
 }
 
@@ -206,7 +250,7 @@ function calculateAverageVolume(klines, period = 20) {
 
     let totalVolume = 0;
 
-    const recentKlines = klines.slice(-period);
+   const recentKlines = klines.slice(-(period + 1), -1);
 
     for (let candle of recentKlines) {
 
@@ -220,11 +264,17 @@ function calculateAverageVolume(klines, period = 20) {
 
 function calculateADX(klines, period = 14) {
 
-    if (klines.length < period + 1) return null;
+    if (klines.length < (period * 2) + 1) {
+        return null;
+    }
 
-    let trList = [];
-    let plusDMList = [];
-    let minusDMList = [];
+    const trList = [];
+    const plusDMList = [];
+    const minusDMList = [];
+
+    // ================================
+    // TRUE RANGE + DIRECTIONAL MOVEMENT
+    // ================================
 
     for (let i = 1; i < klines.length; i++) {
 
@@ -241,39 +291,105 @@ function calculateADX(klines, period = 14) {
             Math.abs(low - prevClose)
         );
 
-        trList.push(tr);
-
         const upMove = high - prevHigh;
         const downMove = prevLow - low;
 
-        plusDMList.push(
-            (upMove > downMove && upMove > 0) ? upMove : 0
-        );
+        const plusDM =
+            upMove > downMove && upMove > 0
+                ? upMove
+                : 0;
 
-        minusDMList.push(
-            (downMove > upMove && downMove > 0) ? downMove : 0
-        );
+        const minusDM =
+            downMove > upMove && downMove > 0
+                ? downMove
+                : 0;
 
+        trList.push(tr);
+        plusDMList.push(plusDM);
+        minusDMList.push(minusDM);
     }
 
-    const tr =
-        trList.slice(-period).reduce((a,b)=>a+b,0);
+    // ================================
+    // INITIAL WILDER SMOOTHING
+    // ================================
 
-    const plusDM =
-        plusDMList.slice(-period).reduce((a,b)=>a+b,0);
+    let smoothedTR = trList
+        .slice(0, period)
+        .reduce((a, b) => a + b, 0);
 
-    const minusDM =
-        minusDMList.slice(-period).reduce((a,b)=>a+b,0);
+    let smoothedPlusDM = plusDMList
+        .slice(0, period)
+        .reduce((a, b) => a + b, 0);
 
-    const plusDI = (plusDM / tr) * 100;
-    const minusDI = (minusDM / tr) * 100;
+    let smoothedMinusDM = minusDMList
+        .slice(0, period)
+        .reduce((a, b) => a + b, 0);
 
-    const dx =
-        (Math.abs(plusDI - minusDI) /
-        (plusDI + minusDI)) * 100;
+    const dxList = [];
 
-    return dx;
+    // ================================
+    // CALCULATE DX
+    // ================================
 
+    for (let i = period; i < trList.length; i++) {
+
+        smoothedTR =
+            smoothedTR -
+            (smoothedTR / period) +
+            trList[i];
+
+        smoothedPlusDM =
+            smoothedPlusDM -
+            (smoothedPlusDM / period) +
+            plusDMList[i];
+
+        smoothedMinusDM =
+            smoothedMinusDM -
+            (smoothedMinusDM / period) +
+            minusDMList[i];
+
+        if (smoothedTR === 0) {
+            continue;
+        }
+
+        const plusDI =
+            (smoothedPlusDM / smoothedTR) * 100;
+
+        const minusDI =
+            (smoothedMinusDM / smoothedTR) * 100;
+
+        const diSum = plusDI + minusDI;
+
+        if (diSum === 0) {
+            continue;
+        }
+
+        const dx =
+            (Math.abs(plusDI - minusDI) / diSum) * 100;
+
+        dxList.push(dx);
+    }
+
+    // ================================
+    // WILDER ADX
+    // ================================
+
+    if (dxList.length < period) {
+        return null;
+    }
+
+    let adx = dxList
+        .slice(0, period)
+        .reduce((a, b) => a + b, 0) / period;
+
+    for (let i = period; i < dxList.length; i++) {
+
+        adx =
+            ((adx * (period - 1)) + dxList[i]) /
+            period;
+    }
+
+    return adx;
 }
 
 async function getBTCPrice() {
@@ -360,7 +476,86 @@ if (window.AlphaMindChart) {
 
     const averageVolume = calculateAverageVolume(klines);
 
+    let volumeRatio = 0;
+
+if (averageVolume && averageVolume > 0) {
+    volumeRatio = latestVolume / averageVolume;
+}
+
+console.log(
+    "Volume Ratio:",
+    volumeRatio.toFixed(2) + "x"
+);
+
+document.getElementById("volumeRatio").textContent =
+    "Volume Ratio : " + volumeRatio.toFixed(2) + "x";
+
+    let volumeConfirmation = "Normal 🟡";
+
+if (
+    averageVolume &&
+    latestVolume >= averageVolume * 1.5
+) {
+    volumeConfirmation = "Strong 🟢";
+}
+else if (
+    averageVolume &&
+    latestVolume >= averageVolume * 1.2
+) {
+    volumeConfirmation = "Above Normal 🟢";
+}
+else if (
+    averageVolume &&
+    latestVolume >= averageVolume * 0.8
+) {
+    volumeConfirmation = "Normal 🟡";
+}
+else if (
+    averageVolume &&
+    latestVolume >= averageVolume * 0.7
+) {
+    volumeConfirmation = "Below Normal ⚠️";
+}
+else if (
+    averageVolume
+) {
+    volumeConfirmation = "Weak 🔴";
+}
+
+console.log(
+    "Volume Confirmation:",
+    volumeConfirmation
+);
+
+console.log(
+    "Volume Confirmation:",
+    volumeConfirmation
+);
+
     const atr = calculateATR(klines);
+
+    const atrPrice = closePrices[closePrices.length - 1];
+
+const atrPercent =
+    atrPrice > 0
+        ? (atr / atrPrice) * 100
+        : 0;
+
+console.log("ATR %:", atrPercent);
+
+let volatilityStatus = "Normal 🟡";
+
+if (atrPercent < 0.25) {
+    volatilityStatus = "Low 🔵";
+}
+else if (atrPercent >= 0.60) {
+    volatilityStatus = "High 🔴";
+}
+
+console.log(
+    "Volatility:",
+    volatilityStatus
+);
 
     const macd = calculateMACD(closePrices);
     const pattern = detectCandlestickPattern(klines);
@@ -517,6 +712,18 @@ else if (volumeStatus === "Low 🔴") {
 let buyScore = 0;
 let sellScore = 0;
 
+// ================================
+// SIDEWAYS MARKET FILTER
+// ================================
+
+let marketIsSideways = false;
+
+if (
+    adx < 20 &&
+    Math.abs(ema9 - ema20) < atr * 0.25
+) {
+    marketIsSideways = true;
+}
 
 // ================================
 // BUY CONDITIONS
@@ -526,7 +733,7 @@ if (ema9 > ema20) {
     buyScore += 25;
 }
 
-if (rsi > 52) {
+if (rsi > 55) {
     buyScore += 15;
 }
 
@@ -536,12 +743,19 @@ if (adx > 20 && ema9 > ema20) {
 
 }
 
-if (macd > 0) {
+if (
+    macd &&
+    macd.macdLine > macd.signalLine &&
+    macd.histogram > 0
+) {
     buyScore += 15;
 }
 
-if (volumeStatus === "High 🟢") {
+if (volumeConfirmation === "Strong 🟢") {
     buyScore += 10;
+}
+else if (volumeConfirmation === "Above Normal 🟢") {
+    buyScore += 5;
 }
 
 
@@ -553,7 +767,7 @@ if (ema9 < ema20) {
     sellScore += 25;
 }
 
-if (rsi < 48) {
+if (rsi < 45) {
     sellScore += 15;
 }
 
@@ -562,12 +776,19 @@ if (adx > 20 && ema9 < ema20) {
     sellScore += 15;
 }
 
-if (macd < 0) {
+if (
+    macd &&
+    macd.macdLine < macd.signalLine &&
+    macd.histogram < 0
+) {
     sellScore += 15;
 }
 
-if (volumeStatus === "High 🟢") {
+if (volumeConfirmation === "Strong 🟢") {
     sellScore += 10;
+}
+else if (volumeConfirmation === "Above Normal 🟢") {
+    sellScore += 5;
 }
 
 
@@ -576,21 +797,22 @@ if (volumeStatus === "High 🟢") {
 // ================================
 
 if (
+    !marketIsSideways &&
     buyScore >= 60 &&
     buyScore > sellScore
 ) {
 
     signal = "BUY 🟢";
 
-    aiScore = Math.min(
-        50 + buyScore / 2,
-        100
-    );
+   aiScore = Math.min(
+    60 + (buyScore - 60) * 0.75,
+    75
+);
 
     confidence = Math.min(
-        45 + buyScore / 2,
-        100
-    );
+    55 + (buyScore - 60) * 0.75,
+    70
+);
 
     trend = "Bullish 🟢";
     recommendation = "Buy Confirmation 🟢";
@@ -601,21 +823,22 @@ if (
 }
 
 else if (
+     !marketIsSideways &&
     sellScore >= 60 &&
     sellScore > buyScore
 ) {
 
     signal = "SELL 🔴";
 
-    aiScore = Math.min(
-        50 + sellScore / 2,
-        100
-    );
+   aiScore = Math.min(
+    60 + (sellScore - 60) * 0.75,
+    75
+);
 
-    confidence = Math.min(
-        45 + sellScore / 2,
-        100
-    );
+   confidence = Math.min(
+    55 + (sellScore - 60) * 0.75,
+    70
+);
 
     trend = "Bearish 🔴";
     recommendation = "Sell Confirmation 🔴";
@@ -627,13 +850,14 @@ else if (
 
 else {
 
-    signal = "NO SIGNAL";
+    signal = "NO SIGNAL 🟡";
 
-    aiScore = 45;
-    confidence = 40;
+    aiScore = 0;
+    confidence = 0;
 
     recommendation = "Wait for Better Setup 🟡";
-    riskLevel = "Medium 🟡";
+    riskLevel = "High 🔴";
+    marketStrength = "Sideways 🟡";
     strategy = "Wait for Confirmation 🟡";
 
 }
@@ -675,8 +899,8 @@ confidence = Math.max(
 let breakout = "No Breakout 🟡";
 
 if (
-currentPrice > resistance + (atr * 0.2) &&
-  latestVolume > averageVolume * 1.5  &&
+    closePrices[closePrices.length - 1] > resistance + (atr * 0.2) &&
+    volumeConfirmation === "Strong 🟢" &&
     adx > 25
 ) {
 
@@ -685,12 +909,30 @@ currentPrice > resistance + (atr * 0.2) &&
 }
 
 else if (
-    currentPrice < support - (atr * 0.2) &&
-    latestVolume > averageVolume * 1.5 &&
+   closePrices[closePrices.length - 1] < support - (atr * 0.2) &&
+    volumeConfirmation === "Strong 🟢" &&
     adx > 25
 ) {
 
     breakout = "Strong Support Breakdown 🔴";
+
+}
+
+else if (
+    currentPrice > resistance &&
+    volumeConfirmation !== "Strong 🟢"
+) {
+
+    breakout = "Weak Resistance Breakout ⚠️";
+
+}
+
+else if (
+    currentPrice < support &&
+    volumeConfirmation !== "Strong 🟢"
+) {
+
+    breakout = "Weak Support Breakdown ⚠️";
 
 }
 
@@ -710,6 +952,252 @@ else if (
 
     breakout = "Fake Breakdown ⚠️";
 
+}
+console.log("Current Price:", currentPrice);
+console.log("Resistance Check:", currentPrice > resistance);
+console.log("Support Check:", currentPrice < support);
+
+console.log(
+    "Distance From Resistance:",
+    (resistance - currentPrice).toFixed(2)
+);
+
+console.log(
+    "Distance From Support:",
+    (currentPrice - support).toFixed(2)
+);
+console.log(
+    "Support Distance / ATR:",
+    ((currentPrice - support) / atr).toFixed(2) + "x"
+);
+// ================================
+// SUPPORT / RESISTANCE DISTANCE
+// ================================
+
+const supportDistanceATR =
+    (currentPrice - support) / atr;
+
+const resistanceDistanceATR =
+    (resistance - currentPrice) / atr;
+
+
+// ================================
+// RECENT CANDLE DATA
+// Binance kline format:
+// [0] openTime
+// [1] open
+// [2] high
+// [3] low
+// [4] close
+// [5] volume
+// ================================
+
+const recentKlines =
+    klines.slice(-5);
+
+
+// ================================
+// SUPPORT REACTION
+// ================================
+
+let supportReaction = false;
+
+for (const candle of recentKlines) {
+
+    const candleHigh = Number(candle[2]);
+    const candleLow = Number(candle[3]);
+    const candleClose = Number(candle[4]);
+
+    const touchedSupport =
+        candleLow <= support + (atr * 0.20);
+
+    const bouncedFromSupport =
+        candleClose > candleLow &&
+        (candleClose - candleLow) >= atr * 0.15;
+
+    if (
+        touchedSupport &&
+        bouncedFromSupport
+    ) {
+
+        supportReaction = true;
+        break;
+
+    }
+}
+
+
+// ================================
+// RESISTANCE REACTION
+// ================================
+
+let resistanceReaction = false;
+
+for (const candle of recentKlines) {
+
+    const candleHigh = Number(candle[2]);
+    const candleLow = Number(candle[3]);
+    const candleClose = Number(candle[4]);
+
+    const touchedResistance =
+        candleHigh >= resistance - (atr * 0.20);
+
+    const rejectedFromResistance =
+        candleClose < candleHigh &&
+        (candleHigh - candleClose) >= atr * 0.15;
+
+    if (
+        touchedResistance &&
+        rejectedFromResistance
+    ) {
+
+        resistanceReaction = true;
+        break;
+
+    }
+}
+
+// ================================
+// CURRENT PRICE DISTANCE FILTER
+// ================================
+
+if (supportDistanceATR > 0.75) {
+    supportReaction = false;
+}
+
+if (resistanceDistanceATR > 0.75) {
+    resistanceReaction = false;
+}
+
+// ================================
+// VOLUME CONFIRMATION
+// ================================
+
+const volumeConfirmed =
+    volumeRatio >= 1.0;
+
+
+// ================================
+// SUPPORT ZONE
+// ================================
+
+let supportZone = "Normal 🟡";
+
+if (currentPrice < support) {
+
+    supportZone = "Support Breakdown 🔴";
+
+}
+else if (
+    supportDistanceATR <= 0.25 &&
+    supportReaction &&
+    volumeConfirmed
+) {
+
+    supportZone = "Strong Support 🟢";
+
+}
+else if (
+    supportDistanceATR <= 0.5
+) {
+
+    supportZone = "Near Support 🔵";
+
+}
+else {
+
+    supportZone = "Normal 🟡";
+
+}
+
+
+// ================================
+// RESISTANCE ZONE
+// ================================
+
+let resistanceZone = "Normal 🟡";
+
+if (currentPrice > resistance) {
+
+    resistanceZone = "Resistance Breakout 🟢";
+
+}
+else if (
+    resistanceDistanceATR <= 0.25 &&
+    resistanceReaction &&
+    volumeConfirmed
+) {
+
+    resistanceZone = "Strong Resistance 🔴";
+
+}
+else if (
+    resistanceDistanceATR <= 0.5
+) {
+
+    resistanceZone = "Near Resistance 🔴";
+
+}
+else {
+
+    resistanceZone = "Normal 🟡";
+
+}
+
+
+// ================================
+// CONSOLE DEBUG
+// ================================
+
+console.log(
+    "Support Distance / ATR:",
+    supportDistanceATR.toFixed(2) + "x"
+);
+
+console.log(
+    "Resistance Distance / ATR:",
+    resistanceDistanceATR.toFixed(2) + "x"
+);
+
+console.log(
+    "Support Reaction:",
+    supportReaction
+);
+
+console.log(
+    "Resistance Reaction:",
+    resistanceReaction
+);
+
+console.log(
+    "Volume Confirmed:",
+    volumeConfirmed
+);
+
+console.log(
+    "Support Zone:",
+    supportZone
+);
+
+console.log(
+    "Resistance Zone:",
+    resistanceZone
+);
+
+console.log(
+    "Breakout:",
+    breakout
+);
+// ================================
+// BREAKOUT SCORE BONUS
+// ================================
+
+if (breakout === "Strong Resistance Breakout 🟢") {
+    buyScore += 10;
+}
+
+if (breakout === "Strong Support Breakdown 🔴") {
+    sellScore += 10;
 }
 
         console.log(data);
@@ -754,14 +1242,20 @@ else if (
         maximumFractionDigits: 2
     });
 
+    document.getElementById("supportZone").textContent =
+    "Support Zone : " + supportZone;
+
+document.getElementById("resistanceZone").textContent =
+    "Resistance Zone : " + resistanceZone;
+
     document.getElementById("atr").textContent =
     "ATR : " + atr.toFixed(2);
 
     document.getElementById("adx").textContent =
     "ADX : " + adx.toFixed(2);
 
-    document.getElementById("macd").textContent =
-    "MACD : " + macd.toFixed(2);
+   document.getElementById("macd").textContent =
+    "MACD : " + macd.macdLine.toFixed(2);
 
     document.getElementById("trend").textContent =
     "Trend : " + trend;
@@ -963,10 +1457,43 @@ console.log("Final Confidence:", confidence);
 console.log("Final AI Score:", aiScore);
 
 
-
 // Final signal processing starts after all base calculations
 
 let finalSignal = signal;
+
+if (volatilityStatus === "High 🔴") {
+    aiScore += 5;
+}
+else if (volatilityStatus === "Low 🔵") {
+    aiScore -= 10;
+}
+
+if (volatilityStatus === "High 🔴") {
+    riskLevel = "High 🔴";
+}
+else if (volatilityStatus === "Low 🔵") {
+    riskLevel = "High 🔴";
+}
+else {
+    riskLevel = "Medium 🟡";
+}
+
+if (
+    volatilityStatus === "Low 🔵" &&
+    (
+        finalSignal.includes("BUY") ||
+        finalSignal.includes("SELL")
+    )
+) {
+    finalSignal = "NO SIGNAL 🟡";
+    aiScore = 0;
+    confidence = 0;
+
+    recommendation = "Low Volatility - Wait 🟡";
+    strategy = "Wait for Volatility Confirmation 🟡";
+    riskLevel = "High 🔴";
+    marketStrength = "Low Volatility 🔵";
+}
 
 
 
@@ -1050,16 +1577,19 @@ if (
 
 
 // Both Higher Timeframes are against the signal
-// Extra penalty, but signal is NOT cancelled.
+// Cancel the trade.
 
 if (higherTimeframeConflicts === 2) {
 
-    aiScore -= 8;
-    confidence -= 5;
+    finalSignal = "NO SIGNAL 🟡";
+
+    aiScore = 0;
+    confidence = 0;
 
     recommendation = "Higher TF Strong Conflict ⚠️";
-    strategy = "Short-Term Trade / Strong Higher TF Conflict ⚠️";
+    strategy = "Wait for Higher TF Confirmation 🟡";
     riskLevel = "High 🔴";
+    marketStrength = "Mixed ⚠️";
 }
 
 // ================================
@@ -1084,6 +1614,60 @@ confidence = Math.max(
 // Sirf bahut weak signals ko reject karo.
 // Pehle 80 se neeche sab reject ho rahe the.
 // Ab threshold 65 hai.
+
+if (
+    (finalSignal.includes("BUY") ||
+     finalSignal.includes("SELL")) &&
+    volumeConfirmation === "Weak 🔴"
+) {
+
+    finalSignal = "NO SIGNAL 🟡";
+
+    aiScore = 0;
+    confidence = 0;
+
+    recommendation = "Weak Volume Confirmation ⚠️";
+    strategy = "Wait for Volume Confirmation 🟡";
+    riskLevel = "High 🔴";
+    marketStrength = "Weak Volume 🔴";
+
+    localStorage.removeItem(
+        "alphaMindPendingTrade"
+    );
+}
+
+if (
+    finalSignal.includes("BUY") &&
+    breakout === "Weak Resistance Breakout ⚠️"
+) {
+
+    recommendation = "Weak Breakout ⚠️";
+    strategy = "Wait for Strong Breakout 🟡";
+    riskLevel = "High 🔴";
+}
+
+if (
+    finalSignal.includes("SELL") &&
+    breakout === "Weak Support Breakdown ⚠️"
+) {
+
+    recommendation = "Weak Breakdown ⚠️";
+    strategy = "Wait for Strong Breakdown 🟡";
+    riskLevel = "High 🔴";
+}
+
+if (
+    (finalSignal.includes("BUY") ||
+     finalSignal.includes("SELL")) &&
+    volumeConfirmation === "Below Normal ⚠️"
+) {
+
+    confidence -= 10;
+
+    recommendation = "Low Volume Confirmation ⚠️";
+    riskLevel = "High 🔴";
+    strategy = "Wait for Stronger Volume 🟡";
+}
 
 if (
     (finalSignal.includes("BUY") ||
@@ -1244,13 +1828,6 @@ else {
 
 
 
-  document.getElementById("signal").textContent =
-    "Signal : " + finalSignal;
-
-    signal = finalSignal;
-
-    confidence = Math.min(confidence, 100);
-
     // Fake Breakout Protection
 
 if (
@@ -1258,14 +1835,22 @@ if (
     breakout === "Fake Breakout ⚠️"
 ) {
 
-    recommendation = "Buy With Confirmation ⚠️";
-    riskLevel = "Medium 🟡";
+    finalSignal = "NO SIGNAL 🟡";
+    signal = "NO SIGNAL 🟡";
+
+    aiScore = 0;
+    confidence = 0;
+
+    recommendation = "Fake Breakout Detected ⚠️";
+    riskLevel = "High 🔴";
+    marketStrength = "Weak / Unconfirmed ⚠️";
     strategy = "Wait for Breakout Confirmation 🟡";
-
-    aiScore -= 15;
-
 }
-// Buy Near Resistance Protection
+
+// ================================
+// BUY NEAR RESISTANCE + LOW VOLUME
+// TRADE BLOCK
+// ================================
 
 if (
     finalSignal === "BUY 🟢" &&
@@ -1273,12 +1858,33 @@ if (
     volumeStatus === "Low 🔴"
 ) {
 
-    recommendation = "Buy Near Resistance ⚠️";
-    riskLevel = "Medium 🟡";
+    finalSignal = "NO SIGNAL 🟡";
+    signal = "NO SIGNAL 🟡";
+
+    aiScore = 0;
+    confidence = 0;
+
+    recommendation = "Buy Near Resistance - Weak Volume ⚠️";
+    riskLevel = "High 🔴";
+    marketStrength = "Weak / Unconfirmed ⚠️";
     strategy = "Wait for Breakout Confirmation 🟡";
+}
+if (
+    finalSignal === "SELL 🔴" &&
+    nearSupport &&
+    volumeStatus === "Low 🔴"
+) {
 
-    aiScore -= 10;
+    finalSignal = "NO SIGNAL 🟡";
+    signal = "NO SIGNAL 🟡";
 
+    aiScore = 0;
+    confidence = 0;
+
+    recommendation = "Sell Near Support - Weak Volume ⚠️";
+    riskLevel = "High 🔴";
+    marketStrength = "Weak / Unconfirmed ⚠️";
+    strategy = "Wait for Support Breakdown Confirmation 🟡";
 }
 
   document.getElementById("confidence").textContent =
@@ -1309,19 +1915,26 @@ else {
 
 }
 
-if (finalSignal.includes("BUY") && distanceFromSupport < 100) {
+// ================================
+// ATR-BASED SUPPORT / RESISTANCE
+// ================================
 
+if (
+    finalSignal.includes("BUY") &&
+    distanceFromSupport <= atr
+) {
     recommendation = "Strong Buy Near Support 🟢";
-    aiScore += 10;
-
+    aiScore += 5;
 }
 
-if (finalSignal.includes("SELL") && distanceFromResistance < 100) {
-
+if (
+    finalSignal.includes("SELL") &&
+    distanceFromResistance <= atr
+) {
     recommendation = "Strong Sell Near Resistance 🔴";
-    aiScore += 10;
-
+    aiScore += 5;
 }
+
 document.getElementById("recommendation").textContent =
 "Recommendation : " + recommendation;
 
@@ -1329,6 +1942,60 @@ aiScore = Math.min(aiScore, 100);
 
 document.getElementById("aiScore").textContent =
 "AI Score : " + aiScore + "/100";
+
+// ==========================================
+// FINAL SIGNAL LOCK
+// ==========================================
+
+if (finalSignal === "NO SIGNAL 🟡") {
+
+    signal = "NO SIGNAL 🟡";
+
+    confidence = 0;
+    aiScore = 0;
+
+} else {
+
+    signal = finalSignal;
+
+    confidence = Math.max(
+        0,
+        Math.min(confidence, 100)
+    );
+
+    aiScore = Math.max(
+        0,
+        Math.min(aiScore, 100)
+    );
+}
+
+
+// ==========================================
+// FINAL UI
+// ==========================================
+
+signal = finalSignal;
+
+document.getElementById("signal").textContent =
+    "Signal : " + finalSignal;
+
+document.getElementById("confidence").textContent =
+    "Confidence : " + confidence.toFixed(1) + "%";
+
+document.getElementById("aiScore").textContent =
+    "AI Score : " + aiScore.toFixed(1) + "/100";
+
+document.getElementById("recommendation").textContent =
+    "Recommendation : " + recommendation;
+
+document.getElementById("strategy").textContent =
+    "Strategy : " + strategy;
+
+document.getElementById("marketStrength").textContent =
+    "Market Strength : " + marketStrength;
+
+document.getElementById("riskLevel").textContent =
+    "Risk Level : " + riskLevel;
 
 if (
     (finalSignal.includes("BUY") || finalSignal.includes("SELL")) &&
@@ -1561,7 +2228,7 @@ function savePendingTrade(signal, entry, target, stopLoss, aiScore, confidence) 
 
         if (
             sameSignal &&
-            entryPercentDifference < 0.20
+            entryPercentDifference < 0.50
         ) {
 
             console.log(
@@ -1572,6 +2239,45 @@ function savePendingTrade(signal, entry, target, stopLoss, aiScore, confidence) 
             return;
         }
     }
+
+    // ================================
+// RECENT COMPLETED TRADE CHECK
+// ================================
+
+const tradeHistory = JSON.parse(
+    localStorage.getItem("alphaMindTradeHistory") || "[]"
+);
+
+const recentTrades = tradeHistory.slice(-5);
+
+const duplicateRecentTrade = recentTrades.some(trade => {
+
+    const sameSignal =
+        trade.signal === signal;
+
+    const entryDifference =
+        Math.abs(
+            Number(trade.entry) - Number(entry)
+        );
+
+    const entryPercentDifference =
+        (entryDifference / Number(entry)) * 100;
+
+    return (
+        sameSignal &&
+        entryPercentDifference < 0.50
+    );
+});
+
+if (duplicateRecentTrade) {
+
+    console.log(
+        "RECENT COMPLETED SIGNAL BLOCKED:",
+        signal
+    );
+
+    return;
+}
 
     const pendingTrade = {
         id: Date.now(),
