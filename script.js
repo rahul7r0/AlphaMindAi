@@ -538,43 +538,395 @@ document.addEventListener("DOMContentLoaded", () => {
 // ================================
 
 // ================================
-// PRICING PLAN SELECTION
+// RAZORPAY PAYMENT
 // ================================
 
-function selectPlan(plan) {
+async function startPayment(plan) {
 
-    localStorage.setItem("selectedPlan", plan);
+    console.log("PAYMENT PLAN:", plan);
+console.log("FIREBASE UID:", localStorage.getItem("firebaseUID"));
 
-    window.location.href =
-        "login.html?plan=" + encodeURIComponent(plan);
+    let amount = 0;
+
+    // Plan prices in paise
+    if (plan === "Basic") {
+        amount = 49900;
+    }
+
+    if (plan === "Premium") {
+        amount = 79900;
+    }
+
+    if (plan === "Pro") {
+        amount = 149900;
+    }
+
+    if (!amount) {
+        alert("Invalid plan");
+        return;
+    }
+
+
+    // ================================
+    // GET FIREBASE UID
+    // ================================
+
+    const firebaseUID =
+        localStorage.getItem("firebaseUID");
+
+
+    if (!firebaseUID) {
+
+        alert(
+            "Please login first before purchasing a plan."
+        );
+
+        window.location.href =
+            "login.html?plan=" +
+            encodeURIComponent(plan);
+
+        return;
+    }
+
+
+    try {
+
+        // ================================
+        // CREATE RAZORPAY ORDER
+        // ================================
+
+        const response = await fetch(
+            "http://localhost:3000/api/create-order",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    amount: amount
+                })
+            }
+        );
+
+
+        const order =
+            await response.json();
+
+
+        if (!order.success) {
+
+            alert(
+                order.message ||
+                "Unable to create payment order"
+            );
+
+            return;
+        }
+
+
+        // ================================
+        // RAZORPAY OPTIONS
+        // ================================
+
+        const options = {
+
+            key:
+                "rzp_test_TVTfc9ikiwlKzT",
+
+            amount:
+                order.amount,
+
+            currency:
+                "INR",
+
+            name:
+                "AlphaMind AI",
+
+            description:
+                plan + " Plan",
+
+            order_id:
+                order.order_id,
+
+
+            // ================================
+            // PAYMENT SUCCESS
+            // ================================
+
+            handler:
+                async function (payment) {
+
+                    try {
+
+                        console.log(
+                            "Payment Response:",
+                            payment
+                        );
+
+
+                        console.log(
+                            "Firebase UID:",
+                            firebaseUID
+                        );
+
+
+                        console.log(
+                            "Selected Plan:",
+                            plan
+                        );
+
+
+                        // ================================
+                        // VERIFY PAYMENT
+                        // ================================
+
+                        const verifyResponse =
+                            await fetch(
+                                "http://localhost:3000/api/verify-payment",
+                                {
+                                    method: "POST",
+
+                                    headers: {
+                                        "Content-Type":
+                                            "application/json"
+                                    },
+
+                                    body:
+                                        JSON.stringify({
+
+                                            razorpay_order_id:
+                                                payment.razorpay_order_id,
+
+                                            razorpay_payment_id:
+                                                payment.razorpay_payment_id,
+
+                                            razorpay_signature:
+                                                payment.razorpay_signature,
+
+                                            plan:
+                                                plan,
+
+                                            uid:
+                                                firebaseUID
+
+                                        })
+                                }
+                            );
+
+
+                        const result =
+                            await verifyResponse.json();
+
+
+                        console.log(
+                            "Payment Verification:",
+                            result
+                        );
+
+
+                        // ================================
+                        // VERIFICATION FAILED
+                        // ================================
+
+                        if (!result.success) {
+
+                            alert(
+                                result.message ||
+                                "Payment verification failed"
+                            );
+
+                            return;
+                        }
+
+
+                        // ================================
+                        // SAVE PLAN LOCALLY
+                        // ================================
+
+                        localStorage.setItem(
+                            "selectedPlan",
+                            plan
+                        );
+
+
+                        // ================================
+                        // PAYMENT SUCCESS
+                        // ================================
+
+                        alert(
+                            "Payment Successful! 🎉\n\n" +
+                            plan +
+                            " Plan Activated."
+                        );
+
+
+                        // ================================
+                        // DASHBOARD
+                        // ================================
+
+                        window.location.href =
+                            "dashboard.html";
+
+
+                    } catch (error) {
+
+                        console.error(
+                            "Payment Verification Error:",
+                            error
+                        );
+
+
+                        alert(
+                            "Payment completed, but verification failed."
+                        );
+
+                    }
+
+                },
+
+
+            // ================================
+            // RAZORPAY THEME
+            // ================================
+
+            theme: {
+
+                color:
+                    "#facc15"
+
+            }
+
+        };
+
+
+        // ================================
+        // OPEN RAZORPAY
+        // ================================
+
+        const rzp =
+            new Razorpay(options);
+
+
+        rzp.open();
+
+
+        // ================================
+        // PAYMENT FAILED
+        // ================================
+
+        rzp.on(
+            "payment.failed",
+            function (response) {
+
+                console.error(
+                    "Payment Failed:",
+                    response.error
+                );
+
+
+                alert(
+                    "Payment Failed: " +
+                    (
+                        response.error.description ||
+                        "Please try again."
+                    )
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Razorpay Error:",
+            error
+        );
+
+
+        alert(
+            "Unable to start payment."
+        );
+
+    }
+
 }
+
+
+// ==================================================
+// PLAN BUTTONS
+// ==================================================
 
 const basicPlanBtn =
-    document.getElementById("basicPlanBtn");
+    document.getElementById(
+        "basicPlanBtn"
+    );
+
 
 const premiumPlanBtn =
-    document.getElementById("premiumPlanBtn");
+    document.getElementById(
+        "premiumPlanBtn"
+    );
+
 
 const proPlanBtn =
-    document.getElementById("proPlanBtn");
+    document.getElementById(
+        "proPlanBtn"
+    );
 
+
+// ================================
+// BASIC
+// ================================
 
 if (basicPlanBtn) {
-    basicPlanBtn.addEventListener("click", () => {
-        selectPlan("Basic");
-    });
+
+    basicPlanBtn.onclick =
+        function () {
+
+            startPayment(
+                "Basic"
+            );
+
+        };
+
 }
 
+
+// ================================
+// PREMIUM
+// ================================
 
 if (premiumPlanBtn) {
-    premiumPlanBtn.addEventListener("click", () => {
-        selectPlan("Premium");
-    });
+
+    premiumPlanBtn.onclick =
+        function () {
+
+            startPayment(
+                "Premium"
+            );
+
+        };
+
 }
 
 
+// ================================
+// PRO
+// ================================
+
 if (proPlanBtn) {
-    proPlanBtn.addEventListener("click", () => {
-        selectPlan("Pro");
-    });
+
+    proPlanBtn.onclick =
+        function () {
+
+            startPayment(
+                "Pro"
+            );
+
+        };
+
 }
