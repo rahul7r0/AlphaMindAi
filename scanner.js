@@ -918,40 +918,32 @@ else if (
 
 }
 
-else if (
-    currentPrice > resistance &&
+else if ( 
+    currentPrice > resistance && 
+    latestVolume < averageVolume * 0.7 
+) { 
+    breakout = "Fake Breakout ⚠️"; 
+}
+
+else if ( 
+    currentPrice < support && 
+    latestVolume < averageVolume * 0.7 
+) { 
+    breakout = "Fake Breakdown ⚠️"; 
+}
+
+else if ( 
+    currentPrice > resistance && 
     volumeConfirmation !== "Strong 🟢"
-) {
+) { 
+    breakout = "Weak Resistance Breakout ⚠️"; 
+} 
 
-    breakout = "Weak Resistance Breakout ⚠️";
-
-}
-
-else if (
-    currentPrice < support &&
+else if ( 
+    currentPrice < support && 
     volumeConfirmation !== "Strong 🟢"
-) {
-
-    breakout = "Weak Support Breakdown ⚠️";
-
-}
-
-else if (
-    currentPrice > resistance &&
-    latestVolume < averageVolume * 0.7
-) {
-
-    breakout = "Fake Breakout ⚠️";
-
-}
-
-else if (
-    currentPrice < support &&
-   latestVolume < averageVolume * 0.7
-) {
-
-    breakout = "Fake Breakdown ⚠️";
-
+) { 
+    breakout = "Weak Support Breakdown ⚠️"; 
 }
 console.log("Current Price:", currentPrice);
 console.log("Resistance Check:", currentPrice > resistance);
@@ -1631,9 +1623,7 @@ if (
     riskLevel = "High 🔴";
     marketStrength = "Weak Volume 🔴";
 
-    localStorage.removeItem(
-        "alphaMindPendingTrade"
-    );
+   
 }
 
 if (
@@ -1681,11 +1671,28 @@ if (
     strategy = "Wait for Confirmation 🟡";
     riskLevel = "High 🔴";
 
-    localStorage.removeItem(
-        "alphaMindPendingTrade"
-    );
+   
 }
 
+// ================================
+// ATR-BASED SUPPORT / RESISTANCE
+// ================================
+
+if (
+    finalSignal.includes("BUY") &&
+    distanceFromSupport <= atr
+) {
+    recommendation = "Strong Buy Near Support 🟢";
+    aiScore += 5;
+}
+
+if (
+    finalSignal.includes("SELL") &&
+    distanceFromResistance <= atr
+) {
+    recommendation = "Strong Sell Near Resistance 🔴";
+    aiScore += 5;
+}
 
 // ================================
 // FINAL SCORE LIMIT AGAIN
@@ -1758,75 +1765,6 @@ document.getElementById("riskLevel").textContent =
         "Risk Reward : --";
 
 }
-// ================================
-// SIGNAL BADGE
-// ================================
-
-const signalBadge =
-    document.getElementById("signalBadge");
-
-const signalStatus =
-    document.getElementById("signalStatus");
-
-
-if (finalSignal.includes("BUY")) {
-
-    signalBadge.textContent =
-        "BUY SIGNAL 🟢";
-
-    signalBadge.style.background =
-        "#16a34a";
-
-    signalBadge.style.color =
-        "white";
-
-    signalBadge.style.borderColor =
-        "#22c55e";
-
-    signalStatus.textContent =
-        "BUY setup detected. Check entry and risk management. 🟢";
-
-}
-
-else if (finalSignal.includes("SELL")) {
-
-    signalBadge.textContent =
-        "SELL SIGNAL 🔴";
-
-    signalBadge.style.background =
-        "#dc2626";
-
-    signalBadge.style.color =
-        "white";
-
-    signalBadge.style.borderColor =
-        "#ef4444";
-
-    signalStatus.textContent =
-        "SELL setup detected. Check entry and risk management. 🔴";
-
-}
-
-else {
-
-    signalBadge.textContent =
-        "NO SIGNAL 🟡";
-
-    signalBadge.style.background =
-        "#854d0e";
-
-    signalBadge.style.color =
-        "white";
-
-    signalBadge.style.borderColor =
-        "#eab308";
-
-    signalStatus.textContent =
-        "Waiting for a high-quality trade setup... 🟡";
-
-}
-
-
 
     // Fake Breakout Protection
 
@@ -1896,44 +1834,8 @@ if (
     document.getElementById("recommendation").textContent =
 "Recommendation : " + recommendation;
 
-if (signal.includes("BUY")) {
 
-    document.getElementById("marketStatus").textContent =
-        "Market Status : Bullish 🟢";
 
-}
-else if (signal.includes("SELL")) {
-
-    document.getElementById("marketStatus").textContent =
-        "Market Status : Bearish 🔴";
-
-}
-else {
-
-    document.getElementById("marketStatus").textContent =
-        "Market Status : Sideways 🟡";
-
-}
-
-// ================================
-// ATR-BASED SUPPORT / RESISTANCE
-// ================================
-
-if (
-    finalSignal.includes("BUY") &&
-    distanceFromSupport <= atr
-) {
-    recommendation = "Strong Buy Near Support 🟢";
-    aiScore += 5;
-}
-
-if (
-    finalSignal.includes("SELL") &&
-    distanceFromResistance <= atr
-) {
-    recommendation = "Strong Sell Near Resistance 🔴";
-    aiScore += 5;
-}
 
 document.getElementById("recommendation").textContent =
 "Recommendation : " + recommendation;
@@ -1996,6 +1898,94 @@ document.getElementById("marketStrength").textContent =
 
 document.getElementById("riskLevel").textContent =
     "Risk Level : " + riskLevel;
+
+ // ================================
+// SIGNAL BADGE
+// ================================
+
+const signalBadge =
+    document.getElementById("signalBadge");
+
+const signalStatus =
+    document.getElementById("signalStatus");
+
+
+if (finalSignal.includes("BUY")) {
+
+    signalBadge.textContent =
+        "BUY SIGNAL 🟢";
+
+    signalBadge.style.background =
+        "#16a34a";
+
+    signalBadge.style.color =
+        "white";
+
+    signalBadge.style.borderColor =
+        "#22c55e";
+
+    signalStatus.textContent =
+        "BUY setup detected. Check entry and risk management. 🟢";
+
+}
+
+else if (finalSignal.includes("SELL")) {
+
+    signalBadge.textContent =
+        "SELL SIGNAL 🔴";
+
+    signalBadge.style.background =
+        "#dc2626";
+
+    signalBadge.style.color =
+        "white";
+
+    signalBadge.style.borderColor =
+        "#ef4444";
+
+    signalStatus.textContent =
+        "SELL setup detected. Check entry and risk management. 🔴";
+
+}
+
+else {
+
+    signalBadge.textContent =
+        "NO SIGNAL 🟡";
+
+    signalBadge.style.background =
+        "#854d0e";
+
+    signalBadge.style.color =
+        "white";
+
+    signalBadge.style.borderColor =
+        "#eab308";
+
+    signalStatus.textContent =
+        "Waiting for a high-quality trade setup... 🟡";
+
+}
+
+if (finalSignal.includes("BUY")) {
+
+    document.getElementById("marketStatus").textContent =
+        "Market Status : Bullish 🟢";
+
+}
+else if (finalSignal.includes("SELL")) {
+
+    document.getElementById("marketStatus").textContent =
+        "Market Status : Bearish 🔴";
+
+}
+else {
+
+    document.getElementById("marketStatus").textContent =
+        "Market Status : Sideways 🟡";
+
+}
+
 
 if (
     (finalSignal.includes("BUY") || finalSignal.includes("SELL")) &&
@@ -2248,7 +2238,7 @@ const tradeHistory = JSON.parse(
     localStorage.getItem("alphaMindTradeHistory") || "[]"
 );
 
-const recentTrades = tradeHistory.slice(-5);
+const recentTrades = tradeHistory.slice(0, 5);
 
 const duplicateRecentTrade = recentTrades.some(trade => {
 
