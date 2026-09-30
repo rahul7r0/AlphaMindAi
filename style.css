@@ -1775,3 +1775,9 @@ nav a:hover{
 .timeframe-btn.active {
     font-weight: bold;
 }
+
+.logo img {
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+}
