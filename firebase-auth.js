@@ -16,62 +16,113 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 
+// ==================================================
+// FIREBASE CONFIG
+// ==================================================
+
 const firebaseConfig = {
-  apiKey: "AIzaSyDvcPINEX7JbBf0qhZNuhxlbMRPx4WypeQ",
-  authDomain: "alphamind-ai-d6821.firebaseapp.com",
-  projectId: "alphamind-ai-d6821",
-  storageBucket: "alphamind-ai-d6821.firebasestorage.app",
-  messagingSenderId: "850925659846",
-  appId: "1:850925659846:web:ec7609935dec09f25f99c7"
+
+  apiKey:
+    "AIzaSyDvcPINEX7JbBf0qhZNuhxlbMRPx4WypeQ",
+
+  authDomain:
+    "alphamind-ai-d6821.firebaseapp.com",
+
+  projectId:
+    "alphamind-ai-d6821",
+
+  storageBucket:
+    "alphamind-ai-d6821.firebasestorage.app",
+
+  messagingSenderId:
+    "850925659846",
+
+  appId:
+    "1:850925659846:web:ec7609935dec09f25f99c7"
+
 };
 
 
-const app = initializeApp(firebaseConfig);
+// ==================================================
+// INITIALIZE FIREBASE
+// ==================================================
 
-const auth = getAuth(app);
+const app =
+  initializeApp(firebaseConfig);
 
-const db = getFirestore(app);
+const auth =
+  getAuth(app);
+
+const db =
+  getFirestore(app);
 
 
-// ================================
+// ==================================================
 // SIGN UP
-// ================================
+// ==================================================
 
 window.signup = function () {
 
   const fullName =
-    document.getElementById("fullName").value.trim();
+    document
+      .getElementById("fullName")
+      .value
+      .trim();
 
   const email =
-    document.getElementById("email").value.trim();
+    document
+      .getElementById("email")
+      .value
+      .trim()
+      .toLowerCase();
 
   const password =
-    document.getElementById("password").value;
+    document
+      .getElementById("password")
+      .value;
 
   const confirmPassword =
-    document.getElementById("confirmPassword").value;
+    document
+      .getElementById("confirmPassword")
+      .value;
 
 
   if (!fullName) {
-    alert("Please enter your full name.");
+
+    alert(
+      "Please enter your full name."
+    );
+
     return;
   }
 
 
   if (!email) {
-    alert("Please enter your email.");
+
+    alert(
+      "Please enter your email."
+    );
+
     return;
   }
 
 
   if (password.length < 6) {
-    alert("Password must be at least 6 characters.");
+
+    alert(
+      "Password must be at least 6 characters."
+    );
+
     return;
   }
 
 
   if (password !== confirmPassword) {
-    alert("Passwords do not match.");
+
+    alert(
+      "Passwords do not match."
+    );
+
     return;
   }
 
@@ -82,52 +133,90 @@ window.signup = function () {
     password
   )
 
-  .then(async (userCredential) => {
+    .then(async (userCredential) => {
 
-    await setDoc(
-      doc(db, "users", userCredential.user.uid),
-      {
-        fullName: fullName,
-        email: userCredential.user.email,
-        plan: "Free Trial",
-        status: "Active",
-        joinDate: new Date().toISOString()
-      }
-    );
+      const user =
+        userCredential.user;
 
 
-    alert("Account Created Successfully!");
+      // Save Firebase UID
+      localStorage.setItem(
+        "firebaseUID",
+        user.uid
+      );
 
-    window.location.href =
-      "dashboard.html";
 
-  })
+      // Save new user
+      await setDoc(
+        doc(
+          db,
+          "users",
+          user.uid
+        ),
+        {
 
-  .catch(error => {
+          fullName:
+            fullName,
 
-    console.error(
-      "Signup Error:",
-      error
-    );
+          email:
+            user.email,
 
-    alert(error.message);
+          plan:
+            "Free Trial",
 
-  });
+          status:
+            "Active",
+
+          joinDate:
+            new Date().toISOString()
+
+        }
+      );
+
+
+      alert(
+        "Account Created Successfully!"
+      );
+
+
+      window.location.href =
+        "dashboard.html";
+
+    })
+
+    .catch(error => {
+
+      console.error(
+        "Signup Error:",
+        error
+      );
+
+      alert(
+        error.message
+      );
+
+    });
 
 };
 
 
-// ================================
+// ==================================================
 // LOGIN
-// ================================
+// ==================================================
 
 window.login = function () {
 
   const email =
-    document.getElementById("email").value.trim();
+    document
+      .getElementById("email")
+      .value
+      .trim()
+      .toLowerCase();
 
   const password =
-    document.getElementById("password").value;
+    document
+      .getElementById("password")
+      .value;
 
 
   if (!email || !password) {
@@ -140,78 +229,111 @@ window.login = function () {
   }
 
 
-  const params =
-    new URLSearchParams(
-      window.location.search
-    );
-
-
-  const selectedPlan =
-    params.get("plan") ||
-    localStorage.getItem("selectedPlan") ||
-    "Free Trial";
-
-
   signInWithEmailAndPassword(
     auth,
     email,
     password
   )
 
-  .then(async (userCredential) => {
+    .then(async (userCredential) => {
 
-    const user =
-      userCredential.user;
+      const user =
+        userCredential.user;
 
 
-    await setDoc(
-      doc(db, "users", user.uid),
-      {
-        plan: selectedPlan,
-        status: "Active"
-      },
-      {
-        merge: true
+      // Save UID
+      localStorage.setItem(
+        "firebaseUID",
+        user.uid
+      );
+
+
+      // ==================================================
+      // IMPORTANT:
+      // LOGIN EXISTING USER
+      // Do NOT overwrite existing Firebase plan
+      // ==================================================
+
+      const userRef =
+        doc(
+          db,
+          "users",
+          user.uid
+        );
+
+
+      const userDoc =
+        await getDoc(userRef);
+
+
+      if (!userDoc.exists()) {
+
+        await setDoc(
+          userRef,
+          {
+
+            email:
+              user.email,
+
+            plan:
+              "Free Trial",
+
+            status:
+              "Active",
+
+            joinDate:
+              new Date().toISOString()
+
+          }
+        );
+
       }
-    );
 
 
-    localStorage.removeItem(
-      "selectedPlan"
-    );
+      alert(
+        "Login Successful!"
+      );
 
 
-    alert("Login Successful!");
+      window.location.href =
+        "dashboard.html";
 
+    })
 
-    window.location.href =
-      "dashboard.html";
+    .catch(error => {
 
-  })
+      console.error(
+        "Login Error:",
+        error
+      );
 
-  .catch(error => {
+      alert(
+        error.message
+      );
 
-    console.error(
-      "Login Error:",
-      error
-    );
-
-    alert(error.message);
-
-  });
+    });
 
 };
 
 
-// ================================
+// ==================================================
 // LOGOUT
-// ================================
+// ==================================================
 
 window.logout = function () {
 
   signOut(auth)
 
     .then(() => {
+
+      localStorage.removeItem(
+        "firebaseUID"
+      );
+
+      localStorage.removeItem(
+        "selectedPlan"
+      );
+
 
       window.location.href =
         "index.html";
@@ -230,9 +352,9 @@ window.logout = function () {
 };
 
 
-// ================================
-// DASHBOARD SECURITY
-// ================================
+// ==================================================
+// DASHBOARD SECURITY + USER DATA
+// ==================================================
 
 if (
   window.location.pathname.includes(
@@ -242,12 +364,226 @@ if (
 
   onAuthStateChanged(
     auth,
-    (user) => {
+    async (user) => {
+
+      // ==================================================
+      // USER NOT LOGGED IN
+      // ==================================================
 
       if (!user) {
 
         window.location.href =
           "login.html";
+
+        return;
+      }
+
+
+      // ==================================================
+      // SAVE UID
+      // ==================================================
+
+      localStorage.setItem(
+        "firebaseUID",
+        user.uid
+      );
+
+
+      // ==================================================
+      // DASHBOARD ELEMENTS
+      // ==================================================
+
+      const welcomeUser =
+        document.getElementById(
+          "welcomeUser"
+        );
+
+      const userEmail =
+        document.getElementById(
+          "userEmail"
+        );
+
+      const userPlan =
+        document.getElementById(
+          "userPlan"
+        );
+
+      const userStatus =
+        document.getElementById(
+          "userStatus"
+        );
+
+      const joinDate =
+        document.getElementById(
+          "joinDate"
+        );
+
+
+      // ==================================================
+      // WELCOME
+      // ==================================================
+
+      if (welcomeUser) {
+
+        const username =
+          user.email
+            ? user.email.split("@")[0]
+            : "User";
+
+        welcomeUser.textContent =
+          `Welcome ${username} 👋`;
+
+      }
+
+
+      // ==================================================
+      // EMAIL
+      // ==================================================
+
+      if (userEmail) {
+
+        userEmail.textContent =
+          `Email: ${user.email}`;
+
+      }
+
+
+      // ==================================================
+      // GET USER DATA FROM FIRESTORE
+      // ==================================================
+
+      try {
+
+        const userRef =
+          doc(
+            db,
+            "users",
+            user.uid
+          );
+
+
+        const userDoc =
+          await getDoc(userRef);
+
+
+        if (userDoc.exists()) {
+
+          const userData =
+            userDoc.data();
+
+
+          // ==================================================
+          // PLAN
+          // ==================================================
+
+          if (userPlan) {
+
+            userPlan.textContent =
+              "Plan : " +
+              (
+                userData.plan ||
+                "Free Trial"
+              );
+
+          }
+
+
+          // ==================================================
+          // STATUS
+          // ==================================================
+
+          if (userStatus) {
+
+            userStatus.textContent =
+              "Status : " +
+              (
+                userData.status ||
+                "Active"
+              ) +
+              " 🟢";
+
+          }
+
+
+          // ==================================================
+          // JOINING DATE
+          // ==================================================
+
+          if (joinDate) {
+
+            let dateToShow =
+              userData.joinDate ||
+              user.metadata.creationTime;
+
+
+            if (dateToShow) {
+
+              joinDate.textContent =
+                "Joining Date : " +
+                new Date(
+                  dateToShow
+                ).toLocaleDateString();
+
+            }
+
+          }
+
+        }
+
+        else {
+
+          // ==================================================
+          // FIRESTORE USER DOCUMENT DOES NOT EXIST
+          // ==================================================
+
+          await setDoc(
+            userRef,
+            {
+
+              email:
+                user.email,
+
+              plan:
+                "Free Trial",
+
+              status:
+                "Active",
+
+              joinDate:
+                user.metadata.creationTime ||
+                new Date().toISOString()
+
+            },
+            {
+              merge: true
+            }
+          );
+
+
+          if (userPlan) {
+
+            userPlan.textContent =
+              "Plan : Free Trial";
+
+          }
+
+
+          if (userStatus) {
+
+            userStatus.textContent =
+              "Status : Active 🟢";
+
+          }
+
+        }
+
+
+      } catch (error) {
+
+        console.error(
+          "User Data Error:",
+          error
+        );
 
       }
 
@@ -255,121 +591,3 @@ if (
   );
 
 }
-
-
-// ================================
-// DASHBOARD USER DATA
-// ================================
-
-const welcomeUser =
-  document.getElementById(
-    "welcomeUser"
-  );
-
-const userEmail =
-  document.getElementById(
-    "userEmail"
-  );
-
-const userPlan =
-  document.getElementById(
-    "userPlan"
-  );
-
-const userStatus =
-  document.getElementById(
-    "userStatus"
-  );
-
-const joinDate =
-  document.getElementById(
-    "joinDate"
-  );
-
-
-onAuthStateChanged(
-  auth,
-  async (user) => {
-
-    if (!user) {
-      return;
-    }
-
-
-    if (welcomeUser) {
-
-      welcomeUser.textContent =
-        `Welcome ${user.email.split("@")[0]} 👋`;
-
-    }
-
-
-    if (userEmail) {
-
-      userEmail.textContent =
-        `Email: ${user.email}`;
-
-    }
-
-
-    // Firebase से user data पढ़ना
-
-    try {
-
-      const userDoc =
-        await getDoc(
-          doc(db, "users", user.uid)
-        );
-
-
-      if (userDoc.exists()) {
-
-        const userData =
-          userDoc.data();
-
-
-        if (userPlan) {
-
-          userPlan.textContent =
-            "Plan : " +
-            (userData.plan ||
-             "Free Trial");
-
-        }
-
-
-        if (userStatus) {
-
-          userStatus.textContent =
-            "Status : " +
-            (userData.status ||
-             "Active") +
-            " 🟢";
-
-        }
-
-      }
-
-
-    } catch (error) {
-
-      console.error(
-        "User Data Error:",
-        error
-      );
-
-    }
-
-
-    if (joinDate) {
-
-      joinDate.textContent =
-        "Joining Date : " +
-        new Date(
-          user.metadata.creationTime
-        ).toLocaleDateString();
-
-    }
-
-  }
-);
