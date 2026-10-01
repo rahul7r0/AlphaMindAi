@@ -2,7 +2,9 @@ const express = require("express");
 const crypto = require("crypto");
 const { initializeApp, cert } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
-const serviceAccount = require("./serviceAccountKey.json");
+const serviceAccount = JSON.parse(
+    process.env.FIREBASE_SERVICE_ACCOUNT_JSON
+);
 const cors = require("cors");
 require("dotenv").config();
 
