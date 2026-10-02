@@ -151,7 +151,7 @@ async function loadNews() {
     try {
 
         const response = await fetch(
-            "http://localhost:3000/api/news"
+            "https://alphamindai.onrender.com/api/news"
         );
 
         if (!response.ok) {
@@ -323,7 +323,7 @@ async function loadEconomicEvents() {
     try {
 
         const response = await fetch(
-            "http://localhost:3000/api/economic-events"
+           "https://alphamindai.onrender.com/api/economic-events"
         );
 
         if (!response.ok) {
@@ -596,7 +596,7 @@ console.log("FIREBASE UID:", localStorage.getItem("firebaseUID"));
         // ================================
 
         const response = await fetch(
-            "http://localhost:3000/api/create-order",
+           "https://alphamindai.onrender.com/api/create-order",
             {
                 method: "POST",
 
@@ -685,7 +685,7 @@ console.log("FIREBASE UID:", localStorage.getItem("firebaseUID"));
 
                         const verifyResponse =
                             await fetch(
-                                "http://localhost:3000/api/verify-payment",
+                              "https://alphamindai.onrender.com/api/verify-payment" ,
                                 {
                                     method: "POST",
 
