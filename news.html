@@ -6,17 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AlphaMind AI - Market News</title>
     <link rel="stylesheet" href="style.css">
-
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ZL34RX9SV5"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-ZL34RX9SV5');
-</script>
-    
 </head>
 
 <body>
@@ -419,7 +408,7 @@ async function loadNews() {
 
         const response =
             await fetch(
-                "http://localhost:3000/api/news"
+               "https://alphamindai.onrender.com/api/news"
             );
 
 
