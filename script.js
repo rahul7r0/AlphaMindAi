@@ -845,11 +845,12 @@ console.log("FIREBASE UID:", localStorage.getItem("firebaseUID"));
             "Razorpay Error:",
             error
         );
+alert(
+    "Razorpay Error: " +
+    (error.message || error)
+);
 
-
-        alert(
-            "Unable to start payment."
-        );
+       
 
     }
 
