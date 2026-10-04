@@ -63,6 +63,17 @@ setPersistence(
 const db =
   getFirestore(app);
 
+onAuthStateChanged(auth, (user) => {
+
+  if (
+    user &&
+    !window.location.pathname.includes("dashboard.html")
+  ) {
+    window.location.href = "dashboard.html";
+  }
+
+});
+
 
 // ==================================================
 // SIGN UP
