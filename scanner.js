@@ -507,7 +507,12 @@ const ema9_4h = calculateEMA(close4h, 9);
 
 const ema20_4h = calculateEMA(close4h, 20);
 
-const chartData = klines.map(candle => ({
+const chartKlines = await fetch30DaysKlines(
+    selectedSymbol,
+    selectedTimeframe
+);
+
+const chartData = chartKlines.map(candle => ({
     time: Math.floor(Number(candle[0]) / 1000),
     open: Number(candle[1]),
     high: Number(candle[2]),
