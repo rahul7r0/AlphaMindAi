@@ -392,6 +392,61 @@ function calculateADX(klines, period = 14) {
     return adx;
 }
 
+async function fetch30DaysKlines(symbol, interval) {
+    const intervalMs = {
+        "15m": 15 * 60 * 1000,
+        "30m": 30 * 60 * 1000,
+        "1h": 60 * 60 * 1000,
+        "4h": 4 * 60 * 60 * 1000
+    }[interval];
+
+    const now = Date.now();
+    const startTime = now - (30 * 24 * 60 * 60 * 1000);
+
+    const allKlines = [];
+    let cursor = startTime;
+
+    while (cursor < now) {
+        const url =
+            `${CONFIG.API_BASE}/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${cursor}&limit=1000`;
+
+        const response = await fetch(url);
+        const batch = await response.json();
+
+        if (!Array.isArray(batch) || batch.length === 0) {
+            break;
+        }
+
+        allKlines.push(...batch);
+
+        const lastOpenTime = Number(batch[batch.length - 1][0]);
+        const nextCursor = lastOpenTime + intervalMs;
+
+        if (nextCursor <= cursor) {
+            break;
+        }
+
+        cursor = nextCursor;
+
+        if (batch.length < 1000) {
+            break;
+        }
+    }
+
+    const unique = Array.from(
+        new Map(
+            allKlines.map(candle => [candle[0], candle])
+        ).values()
+    );
+
+    return unique
+        .filter(candle => Number(candle[0]) >= startTime)
+        .sort(
+            (a, b) =>
+                Number(a[0]) - Number(b[0])
+        );
+}
+
 async function getBTCPrice() {
         const selectedSymbol = localStorage.getItem("alphaMindSelectedSymbol") || CONFIG.SYMBOL;
         document.getElementById("scannerPair").textContent =
