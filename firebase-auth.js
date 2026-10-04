@@ -55,6 +55,11 @@ const app =
 const auth =
   getAuth(app);
 
+setPersistence(
+  auth,
+  browserLocalPersistence
+);
+
 const db =
   getFirestore(app);
 
