@@ -1,7 +1,7 @@
 import { CONFIG } from "./config.js";
 
 let lastAlertedSignal =
-    localStorage.getItem("alphaMindLastAlertedSignal") || "NO SIGNAL 🟡";
+    localStorage.getItem("alphaMindLastAlertedSignal") || "";
 
 async function sendSignalNotification(signal, symbol) {
 
@@ -12,16 +12,11 @@ async function sendSignalNotification(signal, symbol) {
         return;
     }
 
-    if (signal === lastAlertedSignal) {
+    const alertKey = symbol + "_" + signal;
+
+    if (alertKey === lastAlertedSignal) {
         return;
     }
-
-    lastAlertedSignal = signal;
-
-    localStorage.setItem(
-        "alphaMindLastAlertedSignal",
-        signal
-    );
 
     if (!("Notification" in window)) {
         return;
@@ -31,19 +26,26 @@ async function sendSignalNotification(signal, symbol) {
         await Notification.requestPermission();
     }
 
-    if (Notification.permission === "granted") {
-
-        const isBuy = signal === "BUY 🟢";
-
-        new Notification("AlphaMind AI", {
-            body:
-                (isBuy ? "🚀 BUY Signal आया" : "🔻 SELL Signal आया") +
-                "\n" +
-                symbol.replace("USDT", "/USDT"),
-            icon: "favicon.png"
-        });
-
+    if (Notification.permission !== "granted") {
+        return;
     }
+
+    const isBuy = signal === "BUY 🟢";
+
+    new Notification("AlphaMind AI", {
+        body:
+            (isBuy ? "🚀 BUY Signal आया" : "🔻 SELL Signal आया") +
+            "\n" +
+            symbol.replace("USDT", "/USDT"),
+        icon: "favicon.png"
+    });
+
+    lastAlertedSignal = alertKey;
+
+    localStorage.setItem(
+        "alphaMindLastAlertedSignal",
+        alertKey
+    );
 }
 
 function calculateEMA(prices, period) {
