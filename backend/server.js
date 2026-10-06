@@ -81,6 +81,14 @@ app.post("/api/subscribe-push", (req, res) => {
 
 });
 
+app.get("/api/vapid-public-key", (req, res) => {
+
+    res.json({
+        success: true,
+        publicKey: process.env.VAPID_PUBLIC_KEY
+    });
+
+});
 
 // ==================================================
 // PASSWORD RESET OTP SYSTEM
