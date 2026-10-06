@@ -37,6 +37,12 @@ const razorpay = new Razorpay({
 // EXPRESS SERVER
 // ==================================================
 
+webpush.setVapidDetails(
+    "mailto:test121212@gmail.com",
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+);
+
 const app = express();
 
 app.use(cors());
