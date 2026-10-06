@@ -931,3 +931,70 @@ if (proPlanBtn) {
         };
 
 }
+
+// ==================================================
+// ENABLE PUSH NOTIFICATIONS
+// ==================================================
+
+async function enablePushNotifications() {
+
+    if (
+        !("serviceWorker" in navigator) ||
+        !("PushManager" in window) ||
+        !("Notification" in window)
+    ) {
+        return;
+    }
+
+    try {
+
+        const permission =
+            await Notification.requestPermission();
+
+        if (permission !== "granted") {
+            return;
+        }
+
+        const registration =
+            await navigator.serviceWorker.ready;
+
+        const subscription =
+            await registration.pushManager.subscribe({
+
+                userVisibleOnly: true,
+
+                applicationServerKey:
+                    "YOUR_PUBLIC_VAPID_KEY"
+
+            });
+
+        await fetch(
+            "https://alphamindai.onrender.com/api/subscribe-push",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type":
+                        "application/json"
+                },
+
+                body: JSON.stringify({
+                    subscription: subscription
+                })
+            }
+        );
+
+        console.log(
+            "AlphaMind push notifications enabled"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Push notification error:",
+            error
+        );
+
+    }
+
+}
