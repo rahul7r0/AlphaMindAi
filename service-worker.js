@@ -12,7 +12,16 @@ self.addEventListener("push", event => {
         return;
     }
 
-    const data = event.data.json();
+   const data = (() => {
+    try {
+        return event.data.json();
+    } catch (error) {
+        return {
+            title: "AlphaMind AI",
+            body: event.data.text()
+        };
+    }
+})();
 
     event.waitUntil(
         self.registration.showNotification(
