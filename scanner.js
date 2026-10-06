@@ -1984,6 +1984,8 @@ if (finalSignal === "NO SIGNAL 🟡") {
 // FINAL UI
 // ==========================================
 
+sendSignalNotification(finalSignal, selectedSymbol);
+
 signal = finalSignal;
 
 document.getElementById("signal").textContent =
