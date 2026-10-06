@@ -89,7 +89,6 @@ app.get("/api/vapid-public-key", (req, res) => {
     });
 
 });
-
 app.post("/api/test-push", async (req, res) => {
 
     const payload = JSON.stringify({
@@ -98,35 +97,56 @@ app.post("/api/test-push", async (req, res) => {
         url: "/scanner.html"
     });
 
-    try {
+    let sent = 0;
+    let removed = 0;
 
-        for (const subscription of pushSubscriptions.values()) {
+    for (const [key, subscription] of pushSubscriptions.entries()) {
+
+        try {
 
             await webpush.sendNotification(
                 subscription,
                 payload
             );
 
+            sent++;
+
+        } catch (error) {
+
+            console.error(
+                "Push send error:",
+                error.statusCode,
+                error.body
+            );
+
+            if (
+                error.statusCode === 404 ||
+                error.statusCode === 410
+            ) {
+
+                pushSubscriptions.delete(key);
+
+                removed++;
+
+                console.log(
+                    "Expired push subscription removed:",
+                    key
+                );
+
+            }
+
         }
 
-        res.json({
-            success: true,
-            message: "Test push sent"
-        });
-
-    } catch (error) {
-
-        console.error(
-            "Test push error:",
-            error
-        );
-
-        res.status(500).json({
-            success: false,
-            message: "Test push failed"
-        });
-
     }
+
+    res.json({
+        success: true,
+        message: "Test push completed",
+        sent: sent,
+        removed: removed
+    });
+
+});
 
 });
 // ==================================================
