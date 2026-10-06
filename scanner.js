@@ -1,5 +1,51 @@
 import { CONFIG } from "./config.js";
 
+let lastAlertedSignal =
+    localStorage.getItem("alphaMindLastAlertedSignal") || "NO SIGNAL 🟡";
+
+async function sendSignalNotification(signal, symbol) {
+
+    if (
+        signal !== "BUY 🟢" &&
+        signal !== "SELL 🔴"
+    ) {
+        return;
+    }
+
+    if (signal === lastAlertedSignal) {
+        return;
+    }
+
+    lastAlertedSignal = signal;
+
+    localStorage.setItem(
+        "alphaMindLastAlertedSignal",
+        signal
+    );
+
+    if (!("Notification" in window)) {
+        return;
+    }
+
+    if (Notification.permission === "default") {
+        await Notification.requestPermission();
+    }
+
+    if (Notification.permission === "granted") {
+
+        const isBuy = signal === "BUY 🟢";
+
+        new Notification("AlphaMind AI", {
+            body:
+                (isBuy ? "🚀 BUY Signal आया" : "🔻 SELL Signal आया") +
+                "\n" +
+                symbol.replace("USDT", "/USDT"),
+            icon: "favicon.png"
+        });
+
+    }
+}
+
 function calculateEMA(prices, period) {
 
     if (prices.length < period) return null;
