@@ -90,6 +90,45 @@ app.get("/api/vapid-public-key", (req, res) => {
 
 });
 
+app.post("/api/test-push", async (req, res) => {
+
+    const payload = JSON.stringify({
+        title: "AlphaMind AI",
+        body: "🔔 Test Alert — Push notifications working!",
+        url: "/scanner.html"
+    });
+
+    try {
+
+        for (const subscription of pushSubscriptions.values()) {
+
+            await webpush.sendNotification(
+                subscription,
+                payload
+            );
+
+        }
+
+        res.json({
+            success: true,
+            message: "Test push sent"
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Test push error:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Test push failed"
+        });
+
+    }
+
+});
 // ==================================================
 // PASSWORD RESET OTP SYSTEM
 // ==================================================
