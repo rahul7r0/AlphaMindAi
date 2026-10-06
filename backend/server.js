@@ -48,6 +48,39 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ==================================================
+// PUSH SUBSCRIPTIONS
+// ==================================================
+
+const pushSubscriptions = new Map();
+
+app.post("/api/subscribe-push", (req, res) => {
+
+    const { subscription } = req.body;
+
+    if (!subscription) {
+        return res.status(400).json({
+            success: false,
+            message: "Push subscription is required"
+        });
+    }
+
+    const key = subscription.endpoint;
+
+    pushSubscriptions.set(key, subscription);
+
+    console.log(
+        "Push subscription saved:",
+        key
+    );
+
+    res.json({
+        success: true,
+        message: "Push subscription saved"
+    });
+
+});
+
 
 // ==================================================
 // PASSWORD RESET OTP SYSTEM
