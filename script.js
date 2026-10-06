@@ -963,8 +963,12 @@ async function enablePushNotifications() {
 
                 userVisibleOnly: true,
 
-                applicationServerKey:
-                    "YOUR_PUBLIC_VAPID_KEY"
+               applicationServerKey:
+    await fetch(
+        "https://alphamindai.onrender.com/api/vapid-public-key"
+    )
+    .then(res => res.json())
+    .then(data => data.publicKey)
 
             });
 
