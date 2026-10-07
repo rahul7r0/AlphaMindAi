@@ -18,35 +18,50 @@ async function sendSignalNotification(signal, symbol) {
         return;
     }
 
-    if (!("Notification" in window)) {
-        return;
+    try {
+
+        const response = await fetch(
+            "https://alphamindai.onrender.com/api/send-signal",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    symbol: symbol,
+                    signal: signal
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        console.log(
+            "AlphaMind Push Result:",
+            result
+        );
+
+        if (result.success && result.sent > 0) {
+
+            lastAlertedSignal = alertKey;
+
+            localStorage.setItem(
+                "alphaMindLastAlertedSignal",
+                lastAlertedSignal
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "AlphaMind Push Error:",
+            error
+        );
+
     }
-
-    if (Notification.permission === "default") {
-        await Notification.requestPermission();
-    }
-
-    if (Notification.permission !== "granted") {
-        return;
-    }
-
-    const isBuy = signal === "BUY 🟢";
-
-    new Notification("AlphaMind AI", {
-        body:
-            (isBuy ? "🚀 BUY Signal आया" : "🔻 SELL Signal आया") +
-            "\n" +
-            symbol.replace("USDT", "/USDT"),
-        icon: "favicon.png"
-    });
-
-    lastAlertedSignal = alertKey;
-
-    localStorage.setItem(
-        "alphaMindLastAlertedSignal",
-        alertKey
-    );
 }
+
 
 function calculateEMA(prices, period) {
 
