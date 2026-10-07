@@ -1758,6 +1758,67 @@ app.post("/api/verify-payment", async (req, res) => {
 });
 
 // ==================================================
+// AUTOMATIC MARKET DATA SCANNER
+// ==================================================
+
+const autoScanSymbols = [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "BNBUSDT",
+    "DOGEUSDT"
+];
+
+async function fetchMarketData(symbol) {
+
+    const url =
+        `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=100`;
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+        throw new Error(
+            `Binance API error for ${symbol}: ${response.status}`
+        );
+    }
+
+    return await response.json();
+}
+
+async function automaticMarketScan() {
+
+    for (const symbol of autoScanSymbols) {
+
+        try {
+
+            const klines =
+                await fetchMarketData(symbol);
+
+            console.log(
+                "AUTO SCAN DATA:",
+                symbol,
+                klines.length,
+                "candles"
+            );
+
+        } catch (error) {
+
+            console.error(
+                "AUTO SCAN ERROR:",
+                symbol,
+                error.message
+            );
+
+        }
+
+    }
+
+}
+setInterval(automaticMarketScan, 60000);
+automaticMarketScan();
+
+// ==================================================
 // START SERVER
 // ==================================================
 
