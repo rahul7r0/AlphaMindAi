@@ -1623,6 +1623,8 @@ if (
 
 let higherTimeframeConflicts = 0;
 
+console.log("Higher TF Conflicts:", higherTimeframeConflicts);
+
 
 // BUY vs Higher Timeframe
 
