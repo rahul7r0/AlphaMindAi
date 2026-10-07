@@ -919,6 +919,9 @@ else if (volumeConfirmation === "Above Normal 🟢") {
 // FINAL SIGNAL
 // ================================
 
+console.log("BUY SCORE:", buyScore);
+console.log("SELL SCORE:", sellScore);
+
 if (
     !marketIsSideways &&
     buyScore >= 60 &&
