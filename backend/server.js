@@ -1773,17 +1773,29 @@ const autoScanSymbols = [
 async function fetchMarketData(symbol) {
 
     const url =
-        `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=15m&limit=100`;
+        `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=15&limit=100`;
 
     const response = await fetch(url);
 
     if (!response.ok) {
         throw new Error(
-            `Binance API error for ${symbol}: ${response.status}`
+            `Bybit API error for ${symbol}: ${response.status}`
         );
     }
 
-    return await response.json();
+    const data = await response.json();
+
+    if (
+        data.retCode !== 0 ||
+        !data.result ||
+        !Array.isArray(data.result.list)
+    ) {
+        throw new Error(
+            `Bybit data error for ${symbol}`
+        );
+    }
+
+    return data.result.list;
 }
 
 async function automaticMarketScan() {
