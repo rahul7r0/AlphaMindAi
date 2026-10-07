@@ -1972,6 +1972,8 @@ document.getElementById("aiScore").textContent =
 // FINAL SIGNAL LOCK
 // ==========================================
 
+console.log("FINAL SIGNAL:", finalSignal);
+
 if (finalSignal === "NO SIGNAL 🟡") {
 
     signal = "NO SIGNAL 🟡";
