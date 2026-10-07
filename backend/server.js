@@ -147,6 +147,67 @@ app.post("/api/test-push", async (req, res) => {
     });
 
 });
+
+app.post("/api/send-signal", async (req, res) => {
+
+    const { symbol, signal } = req.body;
+
+    if (!symbol || !signal) {
+        return res.status(400).json({
+            success: false,
+            message: "Symbol and signal are required"
+        });
+    }
+
+    const payload = JSON.stringify({
+        title: "AlphaMind AI",
+        body: `${signal} — ${symbol.replace("USDT", "/USDT")}`,
+        url: "/scanner.html"
+    });
+
+    let sent = 0;
+    let removed = 0;
+
+    for (const [key, subscription] of pushSubscriptions.entries()) {
+
+        try {
+
+            await webpush.sendNotification(
+                subscription,
+                payload
+            );
+
+            sent++;
+
+        } catch (error) {
+
+            console.error(
+                "Signal push error:",
+                error.statusCode,
+                error.body
+            );
+
+            if (
+                error.statusCode === 404 ||
+                error.statusCode === 410
+            ) {
+
+                pushSubscriptions.delete(key);
+                removed++;
+
+            }
+
+        }
+
+    }
+
+    res.json({
+        success: true,
+        sent: sent,
+        removed: removed
+    });
+
+});
 // ==================================================
 // PASSWORD RESET OTP SYSTEM
 // ==================================================
