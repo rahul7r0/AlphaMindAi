@@ -1583,7 +1583,7 @@ if (volatilityStatus === "High 🔴") {
     aiScore += 5;
 }
 else if (volatilityStatus === "Low 🔵") {
-    aiScore -= 10;
+    
 }
 
 if (volatilityStatus === "High 🔴") {
