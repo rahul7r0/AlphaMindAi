@@ -1603,9 +1603,7 @@ if (
         finalSignal.includes("SELL")
     )
 ) {
-    finalSignal = "NO SIGNAL 🟡";
-    aiScore = 0;
-    confidence = 0;
+  
 
     recommendation = "Low Volatility - Wait 🟡";
     strategy = "Wait for Volatility Confirmation 🟡";
