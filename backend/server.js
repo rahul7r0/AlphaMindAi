@@ -57,7 +57,7 @@ app.use(express.json());
 
 const pushSubscriptions = new Map();
 
-app.post("/api/subscribe-push", (req, res) => {
+app.post("/api/subscribe-push", async (req, res) => {
 
     const { subscription } = req.body;
 
