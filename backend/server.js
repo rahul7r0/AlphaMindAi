@@ -20,6 +20,9 @@ initializeApp({
 
 const adminAuth = getAuth();
 
+const { getFirestore } = require("firebase-admin/firestore");
+const db = getFirestore();
+
 
 // ==================================================
 // RAZORPAY
