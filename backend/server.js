@@ -72,6 +72,13 @@ app.post("/api/subscribe-push", async (req, res) => {
 
     pushSubscriptions.set(key, subscription);
 
+    await db.collection("pushSubscriptions")
+    .doc(key.replace(/[^a-zA-Z0-9]/g, "_"))
+    .set({
+        subscription: subscription,
+        updatedAt: new Date().toISOString()
+    });
+
     console.log(
         "Push subscription saved:",
         key
