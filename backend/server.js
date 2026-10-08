@@ -2282,6 +2282,44 @@ if (
     };
 }
 
+async function sendSignalPush(symbol, signal) {
+
+    for (const [key, subscription] of pushSubscriptions) {
+
+        try {
+
+            await webpush.sendNotification(
+                subscription,
+                JSON.stringify({
+                    title: "AlphaMind AI",
+                    body: `${signal} — ${symbol}`,
+                    url: "/"
+                })
+            );
+
+            console.log(
+                "AUTO PUSH SENT:",
+                symbol,
+                signal
+            );
+
+        } catch (error) {
+
+            console.error(
+                "AUTO PUSH ERROR:",
+                symbol,
+                error.statusCode || error.message
+            );
+
+            if (
+                error.statusCode === 404 ||
+                error.statusCode === 410
+            ) {
+                pushSubscriptions.delete(key);
+            }
+        }
+    }
+}
 async function automaticMarketScan() {
 
     for (const symbol of autoScanSymbols) {
@@ -2303,6 +2341,15 @@ console.log(
     "SELL:",
     signalResult.sellScore
 );
+if (
+    signalResult.signal === "BUY 🟢" ||
+    signalResult.signal === "SELL 🔴"
+) {
+    await sendSignalPush(
+        symbol,
+        signalResult.signal
+    );
+}
 
         } catch (error) {
 
