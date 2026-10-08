@@ -1002,3 +1002,5 @@ async function enablePushNotifications() {
     }
 
 }
+
+enablePushNotifications();
