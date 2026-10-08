@@ -2308,13 +2308,26 @@ if (
         sellScore
     };
 }
-
+const lastAutoSignals = new Map();
 async function sendSignalPush(symbol, signal) {
 
     console.log(
     "AUTO PUSH SUBSCRIPTIONS:",
     pushSubscriptions.size
 );
+
+const previousSignal = lastAutoSignals.get(symbol);
+
+if (previousSignal === signal) {
+    console.log(
+        "AUTO PUSH SKIPPED (DUPLICATE):",
+        symbol,
+        signal
+    );
+    return;
+}
+
+lastAutoSignals.set(symbol, signal);
 
     for (const [key, subscription] of pushSubscriptions) {
 
