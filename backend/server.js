@@ -1818,6 +1818,418 @@ async function fetchMarketData(symbol) {
     return data.result[resultKey];
 }
 
+function calculateEMA(values, period) {
+
+    if (values.length < period) {
+        return null;
+    }
+
+    const multiplier = 2 / (period + 1);
+
+    let ema =
+        values
+            .slice(0, period)
+            .reduce((sum, value) => sum + value, 0) / period;
+
+    for (let i = period; i < values.length; i++) {
+        ema =
+            (values[i] - ema) * multiplier + ema;
+    }
+
+    return ema;
+}
+
+function calculateRSI(values, period = 14) {
+
+    if (values.length <= period) {
+        return null;
+    }
+
+    let gains = 0;
+    let losses = 0;
+
+    for (let i = 1; i <= period; i++) {
+
+        const change =
+            values[i] - values[i - 1];
+
+        if (change > 0) {
+            gains += change;
+        } else {
+            losses += Math.abs(change);
+        }
+    }
+
+    let averageGain = gains / period;
+    let averageLoss = losses / period;
+
+    for (let i = period + 1; i < values.length; i++) {
+
+        const change =
+            values[i] - values[i - 1];
+
+        const gain =
+            change > 0 ? change : 0;
+
+        const loss =
+            change < 0 ? Math.abs(change) : 0;
+
+        averageGain =
+            ((averageGain * (period - 1)) + gain) /
+            period;
+
+        averageLoss =
+            ((averageLoss * (period - 1)) + loss) /
+            period;
+    }
+
+    if (averageLoss === 0) {
+        return 100;
+    }
+
+    const relativeStrength =
+        averageGain / averageLoss;
+
+    return 100 -
+        (100 / (1 + relativeStrength));
+}
+
+function calculateATR(klines, period = 14) {
+
+    if (klines.length <= period) {
+        return null;
+    }
+
+    const trueRanges = [];
+
+    for (let i = 1; i < klines.length; i++) {
+
+        const high = Number(klines[i][2]);
+        const low = Number(klines[i][3]);
+        const previousClose = Number(klines[i - 1][4]);
+
+        const trueRange = Math.max(
+            high - low,
+            Math.abs(high - previousClose),
+            Math.abs(low - previousClose)
+        );
+
+        trueRanges.push(trueRange);
+    }
+
+    const recentRanges =
+        trueRanges.slice(-period);
+
+    return recentRanges.reduce(
+        (sum, value) => sum + value,
+        0
+    ) / recentRanges.length;
+}
+
+function calculateMACD(values) {
+
+    if (values.length < 35) {
+        return null;
+    }
+
+    const ema12 = calculateEMA(values, 12);
+    const ema26 = calculateEMA(values, 26);
+
+    if (ema12 === null || ema26 === null) {
+        return null;
+    }
+
+    const macdLine = ema12 - ema26;
+
+    return {
+        macdLine: macdLine
+    };
+
+  }
+
+function calculateADX(klines, period = 14) {
+
+    if (klines.length <= period) {
+        return null;
+    }
+
+    let trueRanges = [];
+    let plusDM = [];
+    let minusDM = [];
+
+    for (let i = 1; i < klines.length; i++) {
+
+        const high = Number(klines[i][2]);
+        const low = Number(klines[i][3]);
+
+        const previousHigh = Number(klines[i - 1][2]);
+        const previousLow = Number(klines[i - 1][3]);
+        const previousClose = Number(klines[i - 1][4]);
+
+        const trueRange = Math.max(
+            high - low,
+            Math.abs(high - previousClose),
+            Math.abs(low - previousClose)
+        );
+
+        const upwardMove = high - previousHigh;
+        const downwardMove = previousLow - low;
+
+        trueRanges.push(trueRange);
+
+        plusDM.push(
+            upwardMove > downwardMove && upwardMove > 0
+                ? upwardMove
+                : 0
+        );
+
+        minusDM.push(
+            downwardMove > upwardMove && downwardMove > 0
+                ? downwardMove
+                : 0
+        );
+    }
+
+    const recentTR = trueRanges.slice(-period);
+    const recentPlusDM = plusDM.slice(-period);
+    const recentMinusDM = minusDM.slice(-period);
+
+    const atr =
+        recentTR.reduce((sum, value) => sum + value, 0) /
+        recentTR.length;
+
+    if (atr === 0) {
+        return 0;
+    }
+
+    const plusDI =
+        (
+            recentPlusDM.reduce((sum, value) => sum + value, 0) /
+            recentPlusDM.length
+        ) / atr * 100;
+
+    const minusDI =
+        (
+            recentMinusDM.reduce((sum, value) => sum + value, 0) /
+            recentMinusDM.length
+        ) / atr * 100;
+
+    const diSum = plusDI + minusDI;
+
+    if (diSum === 0) {
+        return 0;
+    }
+
+    return Math.abs(plusDI - minusDI) / diSum * 100;
+}
+
+function calculateVolumeConfirmation(klines) {
+
+    if (klines.length < 20) {
+        return "Normal 🟡";
+    }
+
+    const volumes = klines
+        .slice(-21, -1)
+        .map(candle => Number(candle[6]));
+
+    const latestVolume =
+        Number(klines[klines.length - 1][6]);
+
+    const averageVolume =
+        volumes.reduce(
+            (sum, value) => sum + value,
+            0
+        ) / volumes.length;
+
+    if (latestVolume >= averageVolume * 1.5) {
+        return "Strong 🟢";
+    }
+    else if (latestVolume >= averageVolume * 1.2) {
+        return "Above Normal 🟢";
+    }
+    else if (latestVolume >= averageVolume * 0.8) {
+        return "Normal 🟡";
+    }
+    else if (latestVolume >= averageVolume * 0.7) {
+        return "Below Normal ⚠️";
+    }
+    else {
+        return "Weak 🔴";
+    }
+}
+
+function calculateSupportResistance(klines) {
+
+    if (klines.length < 20) {
+        return {
+            support: null,
+            resistance: null
+        };
+    }
+
+    const recentCandles = klines.slice(-20);
+
+    const lows = recentCandles.map(
+        candle => Number(candle[3])
+    );
+
+    const highs = recentCandles.map(
+        candle => Number(candle[2])
+    );
+
+    return {
+        support: Math.min(...lows),
+        resistance: Math.max(...highs)
+    };
+}
+
+function calculateVolatility(klines, atr) {
+
+    if (!atr || klines.length < 20) {
+        return "Normal 🟡";
+    }
+
+    const closes = klines
+        .slice(-20)
+        .map(candle => Number(candle[4]));
+
+    const highest = Math.max(...closes);
+    const lowest = Math.min(...closes);
+
+    const currentPrice =
+        closes[closes.length - 1];
+
+    const range = highest - lowest;
+
+    if (currentPrice === 0) {
+        return "Normal 🟡";
+    }
+
+    const volatilityPercent =
+        (range / currentPrice) * 100;
+
+    if (volatilityPercent >= 5) {
+        return "High 🔴";
+    }
+    else if (volatilityPercent <= 1.5) {
+        return "Low 🔵";
+    }
+    else {
+        return "Normal 🟡";
+    }
+}
+function calculateTrend(klines) {
+
+    if (klines.length < 20) {
+        return "Sideways 🟡";
+    }
+
+    const closes = klines.map(
+        candle => Number(candle[4])
+    );
+
+    const ema9 = calculateEMA(closes, 9);
+    const ema20 = calculateEMA(closes, 20);
+
+    if (ema9 === null || ema20 === null) {
+        return "Sideways 🟡";
+    }
+
+    if (ema9 > ema20) {
+        return "Bullish 🟢";
+    }
+
+    if (ema9 < ema20) {
+        return "Bearish 🔴";
+    }
+
+    return "Sideways 🟡";
+}
+
+function calculateBasicSignal(klines) {
+
+    if (klines.length < 35) {
+        return {
+            signal: "NO SIGNAL 🟡",
+            buyScore: 0,
+            sellScore: 0
+        };
+    }
+
+    const closes = klines.map(
+        candle => Number(candle[4])
+    );
+
+    const ema9 = calculateEMA(closes, 9);
+    const ema20 = calculateEMA(closes, 20);
+    const rsi = calculateRSI(closes, 14);
+    const macd = calculateMACD(closes);
+    const adx = calculateADX(klines, 14);
+    const volumeConfirmation =
+        calculateVolumeConfirmation(klines);
+
+    let buyScore = 0;
+    let sellScore = 0;
+
+    if (ema9 > ema20) buyScore += 25;
+    if (rsi > 55) buyScore += 15;
+    if (adx > 20 && ema9 > ema20) buyScore += 15;
+
+    if (
+        macd &&
+        macd.macdLine > 0
+    ) {
+        buyScore += 15;
+    }
+
+    if (volumeConfirmation === "Strong 🟢") {
+        buyScore += 10;
+    }
+    else if (volumeConfirmation === "Above Normal 🟢") {
+        buyScore += 5;
+    }
+
+    if (ema9 < ema20) sellScore += 25;
+    if (rsi < 45) sellScore += 15;
+    if (adx > 20 && ema9 < ema20) sellScore += 15;
+
+    if (
+        macd &&
+        macd.macdLine < 0
+    ) {
+        sellScore += 15;
+    }
+
+    if (volumeConfirmation === "Strong 🟢") {
+        sellScore += 10;
+    }
+    else if (volumeConfirmation === "Above Normal 🟢") {
+        sellScore += 5;
+    }
+
+    let signal = "NO SIGNAL 🟡";
+
+    if (
+        buyScore >= 60 &&
+        buyScore > sellScore
+    ) {
+        signal = "BUY 🟢";
+    }
+    else if (
+        sellScore >= 60 &&
+        sellScore > buyScore
+    ) {
+        signal = "SELL 🔴";
+    }
+
+    return {
+        signal,
+        buyScore,
+        sellScore
+    };
+}
+
 async function automaticMarketScan() {
 
     for (const symbol of autoScanSymbols) {
@@ -1827,12 +2239,18 @@ async function automaticMarketScan() {
             const klines =
                 await fetchMarketData(symbol);
 
-            console.log(
-                "AUTO SCAN DATA:",
-                symbol,
-                klines.length,
-                "candles"
-            );
+            const signalResult =
+    calculateBasicSignal(klines);
+
+console.log(
+    "AUTO SIGNAL:",
+    symbol,
+    signalResult.signal,
+    "BUY:",
+    signalResult.buyScore,
+    "SELL:",
+    signalResult.sellScore
+);
 
         } catch (error) {
 
