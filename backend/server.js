@@ -1761,41 +1761,52 @@ app.post("/api/verify-payment", async (req, res) => {
 // AUTOMATIC MARKET DATA SCANNER
 // ==================================================
 
-const autoScanSymbols = [
-    "BTCUSDT",
-    "ETHUSDT",
-    "SOLUSDT",
-    "XRPUSDT",
-    "BNBUSDT",
-    "DOGEUSDT"
-];
-
 async function fetchMarketData(symbol) {
 
+    const krakenSymbols = {
+        BTCUSDT: "XBTUSD",
+        ETHUSDT: "ETHUSD",
+        SOLUSDT: "SOLUSD",
+        XRPUSDT: "XRPUSD",
+        BNBUSDT: "BNBUSD",
+        DOGEUSDT: "DOGEUSD"
+    };
+
+    const pair = krakenSymbols[symbol];
+
+    if (!pair) {
+        throw new Error(
+            `Kraken pair not found for ${symbol}`
+        );
+    }
+
     const url =
-        `https://api.bybit.com/v5/market/kline?category=linear&symbol=${symbol}&interval=15&limit=100`;
+        `https://api.kraken.com/0/public/OHLC?pair=${pair}&interval=15`;
 
     const response = await fetch(url);
 
     if (!response.ok) {
         throw new Error(
-            `Bybit API error for ${symbol}: ${response.status}`
+            `Kraken API error for ${symbol}: ${response.status}`
         );
     }
 
     const data = await response.json();
 
     if (
-        data.retCode !== 0 ||
-        !data.result ||
-        !Array.isArray(data.result.list)
+        data.error &&
+        data.error.length > 0
     ) {
         throw new Error(
-            `Bybit data error for ${symbol}`
+            `Kraken data error for ${symbol}: ${data.error.join(", ")}`
         );
     }
 
-    return data.result.list;
+    const resultKey =
+        Object.keys(data.result)
+            .find(key => key !== "last");
+
+    return data.result[resultKey];
 }
 
 async function automaticMarketScan() {
