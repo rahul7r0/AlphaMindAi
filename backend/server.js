@@ -57,6 +57,33 @@ app.use(express.json());
 
 const pushSubscriptions = new Map();
 
+async function loadPushSubscriptions() {
+
+    const snapshot =
+        await db.collection("pushSubscriptions").get();
+
+    snapshot.forEach(doc => {
+
+        const data = doc.data();
+
+        if (data.subscription) {
+
+            pushSubscriptions.set(
+                data.subscription.endpoint,
+                data.subscription
+            );
+
+        }
+
+    });
+
+    console.log(
+        "PUSH SUBSCRIPTIONS LOADED:",
+        pushSubscriptions.size
+    );
+}
+loadPushSubscriptions();
+
 app.post("/api/subscribe-push", async (req, res) => {
 
     const { subscription } = req.body;
