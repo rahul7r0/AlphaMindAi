@@ -1004,3 +1004,4 @@ async function enablePushNotifications() {
 }
 
 enablePushNotifications();
+console.log("PUSH FUNCTION CALLED");
