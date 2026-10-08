@@ -2284,6 +2284,11 @@ if (
 
 async function sendSignalPush(symbol, signal) {
 
+    console.log(
+    "AUTO PUSH SUBSCRIPTIONS:",
+    pushSubscriptions.size
+);
+
     for (const [key, subscription] of pushSubscriptions) {
 
         try {
