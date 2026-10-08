@@ -1761,6 +1761,15 @@ app.post("/api/verify-payment", async (req, res) => {
 // AUTOMATIC MARKET DATA SCANNER
 // ==================================================
 
+const autoScanSymbols = [
+    "BTCUSDT",
+    "ETHUSDT",
+    "SOLUSDT",
+    "XRPUSDT",
+    "BNBUSDT",
+    "DOGEUSDT"
+];
+
 async function fetchMarketData(symbol) {
 
     const krakenSymbols = {
