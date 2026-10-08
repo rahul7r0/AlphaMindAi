@@ -2166,10 +2166,44 @@ function calculateBasicSignal(klines) {
     const rsi = calculateRSI(closes, 14);
     const macd = calculateMACD(closes);
     const adx = calculateADX(klines, 14);
-    const volumeConfirmation =
-        calculateVolumeConfirmation(klines);
+    const atr = calculateATR(klines, 14);
+    const supportResistance =
+    calculateSupportResistance(klines);
 
-    let buyScore = 0;
+const volatilityStatus =
+    calculateVolatility(
+        klines,
+        atr
+    );
+    const currentPrice =
+    Number(klines[klines.length - 1][4]);
+
+const support =
+    supportResistance.support;
+
+const resistance =
+    supportResistance.resistance;
+
+const nearSupport =
+    support !== null &&
+    currentPrice - support <= atr;
+
+const nearResistance =
+    resistance !== null &&
+    resistance - currentPrice <= atr;
+   const volumeConfirmation =
+    calculateVolumeConfirmation(klines);
+
+let marketIsSideways = false;
+
+if (
+    adx < 20 &&
+    Math.abs(ema9 - ema20) < atr * 0.25
+) {
+    marketIsSideways = true;
+}
+
+let buyScore = 0;
     let sellScore = 0;
 
     if (ema9 > ema20) buyScore += 25;
@@ -2210,18 +2244,36 @@ function calculateBasicSignal(klines) {
 
     let signal = "NO SIGNAL 🟡";
 
-    if (
-        buyScore >= 60 &&
-        buyScore > sellScore
+   if (
+    !marketIsSideways &&
+    buyScore >= 60 &&
+    buyScore > sellScore
     ) {
         signal = "BUY 🟢";
     }
-    else if (
-        sellScore >= 60 &&
-        sellScore > buyScore
+   else if (
+    !marketIsSideways &&
+    sellScore >= 60 &&
+    sellScore > buyScore
     ) {
         signal = "SELL 🔴";
     }
+
+    if (
+    signal === "BUY 🟢" &&
+    nearResistance &&
+    volumeConfirmation === "Weak 🔴"
+) {
+    signal = "NO SIGNAL 🟡";
+}
+
+if (
+    signal === "SELL 🔴" &&
+    nearSupport &&
+    volumeConfirmation === "Weak 🔴"
+) {
+    signal = "NO SIGNAL 🟡";
+}
 
     return {
         signal,
