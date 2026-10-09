@@ -931,6 +931,19 @@ if (proPlanBtn) {
         };
 
 }
+function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/-/g, "+")
+        .replace(/_/g, "/");
+
+    const rawData = window.atob(base64);
+
+    return Uint8Array.from(
+        Array.from(rawData, char => char.charCodeAt(0))
+    );
+}
+
 
 // ==================================================
 // ENABLE PUSH NOTIFICATIONS
@@ -968,7 +981,7 @@ async function enablePushNotifications() {
         "https://alphamindai.onrender.com/api/vapid-public-key"
     )
     .then(res => res.json())
-    .then(data => data.publicKey)
+   .then(data => urlBase64ToUint8Array(data.publicKey))
 
             });
 
