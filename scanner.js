@@ -4,6 +4,7 @@ let lastAlertedSignal =
     localStorage.getItem("alphaMindLastAlertedSignal") || "";
 
 async function sendSignalNotification(signal, symbol) {
+   console.log("PUSH FUNCTION CALLED:", symbol, signal); 
 
     if (
         signal !== "BUY 🟢" &&
