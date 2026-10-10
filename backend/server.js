@@ -82,7 +82,7 @@ async function loadPushSubscriptions() {
         pushSubscriptions.size
     );
 }
-loadPushSubscriptions();
+const pushSubscriptionsReady = loadPushSubscriptions();
 
 app.post("/api/subscribe-push", async (req, res) => {
 
@@ -2419,8 +2419,23 @@ if (
     }
 
 }
-setInterval(automaticMarketScan, 60000);
-automaticMarketScan();
+pushSubscriptionsReady
+    .then(async () => {
+        console.log(
+            "PUSH SUBSCRIPTIONS READY:",
+            pushSubscriptions.size
+        );
+
+        await automaticMarketScan();
+
+        setInterval(automaticMarketScan, 60000);
+    })
+    .catch(error => {
+        console.error(
+            "STARTUP ERROR:",
+            error
+        );
+    });
 
 // ==================================================
 // START SERVER
