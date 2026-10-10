@@ -2400,7 +2400,8 @@ if (
     signalResult.signal === "BUY 🟢" ||
     signalResult.signal === "SELL 🔴"
 ) {
-    await sendSignalPush(
+    console.log(
+        "AUTO PUSH DISABLED — FRONTEND ALERT ONLY:",
         symbol,
         signalResult.signal
     );
