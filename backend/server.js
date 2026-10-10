@@ -2386,6 +2386,16 @@ console.log(
     "SELL:",
     signalResult.sellScore
 );
+console.log(
+    "PUSH DECISION:",
+    symbol,
+    "CURRENT SIGNAL:",
+    signalResult.signal,
+    "WILL SEND:",
+    signalResult.signal === "BUY 🟢" ||
+    signalResult.signal === "SELL 🔴"
+);
+        
 if (
     signalResult.signal === "BUY 🟢" ||
     signalResult.signal === "SELL 🔴"
