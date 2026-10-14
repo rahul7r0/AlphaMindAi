@@ -571,6 +571,15 @@ const ema9_4h = calculateEMA(close4h, 9);
 
 const ema20_4h = calculateEMA(close4h, 20);
 
+
+console.log("30M EMA:", ema9_30m, ema20_30m);
+console.log("1H EMA:", ema9_1h, ema20_1h);
+console.log("4H EMA:", ema9_4h, ema20_4h);
+
+console.log("30M KLINES:", klines30m.length);
+console.log("1H KLINES:", klines1h.length);
+console.log("4H KLINES:", klines4h.length);
+
 const chartKlines = await fetch30DaysKlines(
     selectedSymbol,
     selectedTimeframe
