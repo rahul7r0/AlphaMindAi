@@ -623,6 +623,11 @@ console.log(
     "Volume Ratio:",
     volumeRatio.toFixed(2) + "x"
 );
+console.log("AVERAGE VOLUME:", averageVolume);
+console.log(
+    "LAST 5 VOLUMES:",
+    klines.slice(-5).map(candle => Number(candle[5]))
+);
 
 document.getElementById("volumeRatio").textContent =
     "Volume Ratio : " + volumeRatio.toFixed(2) + "x";
