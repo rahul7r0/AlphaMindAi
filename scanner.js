@@ -607,6 +607,10 @@ if (window.AlphaMindChart) {
     
     const latestVolume = Number(klines[klines.length - 1][5]);
 
+console.log("LATEST KLINE:", klines[klines.length - 1]);
+console.log("RAW LATEST VOLUME:", klines[klines.length - 1][5]);
+console.log("LATEST VOLUME TYPE:", typeof klines[klines.length - 1][5]);
+
     const averageVolume = calculateAverageVolume(klines);
 
     let volumeRatio = 0;
