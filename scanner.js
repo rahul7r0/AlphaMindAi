@@ -923,6 +923,12 @@ else if (volumeConfirmation === "Above Normal 🟢") {
 console.log("BUY SCORE:", buyScore);
 console.log("SELL SCORE:", sellScore);
 
+console.log("MARKET SIDEWAYS:", marketIsSideways);
+console.log("ADX:", adx);
+console.log("EMA GAP / ATR:", Math.abs(ema9 - ema20) / atr);
+console.log("VOLUME CONFIRMATION:", volumeConfirmation);
+console.log("MACD:", macd);
+
 if (
     !marketIsSideways &&
     buyScore >= 60 &&
